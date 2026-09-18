@@ -1,5 +1,4 @@
 {
   "singleQuote": true,
-  "trailingComma": "all",
-  "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+  "trailingComma": "all"
 }
