@@ -107,6 +107,7 @@ _This section will be updated as the `auth` and `users` modules are added, along
 - [x] NestJS scaffolding + Dockerfile
 - [x] Docker Compose (API + PostgreSQL)
 - [x] Prisma integration + database schema
+- [x] basic CI/CD pipeline
 - [ ] `register` / `login` endpoints with password hashing
 - [ ] JWT generation and validation (access + refresh tokens)
 - [ ] NestJS guards + RBAC (user/admin roles)
