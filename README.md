@@ -11,11 +11,11 @@ This service handles registration, login, and access control (roles) for other a
 - **Framework**: [NestJS](https://nestjs.com/) (TypeScript)
 - **Package manager**: [pnpm](https://pnpm.io/) `12.4.2`
 - **Database**: PostgreSQL 16
-- **ORM**: Prisma *(coming soon)*
-- **Authentication**: JWT (access + refresh tokens) *(coming soon)*
+- **ORM**: Prisma _(coming soon)_
+- **Authentication**: JWT (access + refresh tokens) _(coming soon)_
 - **Containerization**: Docker & Docker Compose
 - **Testing**: Jest
-- **CI/CD**: GitHub Actions *(coming soon)*
+- **CI/CD**: GitHub Actions _(coming soon)_
 
 ## 📋 Prerequisites
 
@@ -47,23 +47,23 @@ docker compose down -v
 
 ## 🔧 Environment variables
 
-| Variable | Description | Example |
-|---|---|---|
+| Variable       | Description               | Example                                         |
+| -------------- | ------------------------- | ----------------------------------------------- |
 | `DATABASE_URL` | PostgreSQL connection URL | `postgresql://authuser:authpass@db:5432/authdb` |
 
 These variables are already configured in `docker-compose.yml` for local development. For a real deployment, they must be supplied by the target environment (never commit real sensitive values).
 
 ## 📦 Available scripts
 
-| Command | Description |
-|---|---|
-| `pnpm run start` | Starts the application |
+| Command              | Description                                        |
+| -------------------- | -------------------------------------------------- |
+| `pnpm run start`     | Starts the application                             |
 | `pnpm run start:dev` | Starts the application in watch mode (auto-reload) |
-| `pnpm run build` | Compiles the TypeScript project |
-| `pnpm run test` | Runs unit tests |
-| `pnpm run test:e2e` | Runs end-to-end tests |
-| `pnpm run test:cov` | Runs tests with a coverage report |
-| `pnpm run lint` | Lints the code with ESLint |
+| `pnpm run build`     | Compiles the TypeScript project                    |
+| `pnpm run test`      | Runs unit tests                                    |
+| `pnpm run test:e2e`  | Runs end-to-end tests                              |
+| `pnpm run test:cov`  | Runs tests with a coverage report                  |
+| `pnpm run lint`      | Lints the code with ESLint                         |
 
 ## 🏗️ Local development without Docker
 
@@ -100,22 +100,22 @@ auth-service/
 └── package.json
 ```
 
-*This section will be updated as the `auth` and `users` modules are added, along with the Prisma integration.*
+_This section will be updated as the `auth` and `users` modules are added, along with the Prisma integration._
 
 ## 🗺️ Roadmap
 
 - [x] NestJS scaffolding + Dockerfile
 - [x] Docker Compose (API + PostgreSQL)
-- [ ] Prisma integration + database schema
+- [x] Prisma integration + database schema
 - [ ] `register` / `login` endpoints with password hashing
 - [ ] JWT generation and validation (access + refresh tokens)
 - [ ] NestJS guards + RBAC (user/admin roles)
 - [ ] Protected `/me` endpoint
 - [ ] Unit and integration tests
 - [ ] CI/CD pipeline (GitHub Actions) with Docker image build and push
-- [ ] *(Bonus)* OAuth2 (Google login)
-- [ ] *(Bonus)* Refresh token revocation
-- [ ] *(Bonus)* Rate limiting on sensitive endpoints
+- [ ] _(Bonus)_ OAuth2 (Google login)
+- [ ] _(Bonus)_ Refresh token revocation
+- [ ] _(Bonus)_ Rate limiting on sensitive endpoints
 
 ## 📝 License
 
