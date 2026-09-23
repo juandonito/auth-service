@@ -5,6 +5,8 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://authuser:authpass@db:5432/authdb
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      JWT_EXPIRES_IN: 15m
     depends_on:
       - db
 

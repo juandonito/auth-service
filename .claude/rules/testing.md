@@ -1,0 +1,11 @@
+# Testing
+
+- TDD: write a failing test before implementation code, for every new behavior.
+- Unit tests: `*.spec.ts`, no real database — mock Prisma calls.
+- E2E tests: `*.e2e-spec.ts`, run against real Postgres (via Docker Compose locally, via CI service container in GitHub Actions).
+- Coverage threshold: 80%, enforced in CI.
+- lint-staged runs `--findRelatedTests` on pre-commit (scoped, fast) — full suite only runs pre-push and in CI, never on every commit.
+- Test names follow `should + verb + complement`, e.g. `it('should reject a password without a digit')`.
+- Test data comes from `test/mock/`, one file per kind of object (e.g. `user.mock.ts`). Each file exports generators like `generateMockUser(overrides?)` and `generateMockUsersList(count, overrides?)`. Don't write object literals inline in specs.
+- Mock data is random, never hardcoded: build it with the helpers in `test/mock/common.mock.ts` (`generateRandomString`, `generateRandomInt`, `generateRandomId`, `generateRandomEmail`, `generateRandomDate`, `pickRandom`). Pin a value through `overrides` only when the test asserts on it.
+- Class doubles (services, repositories) also live in `test/mock/` as `generateMock<Class>()` (e.g. `prisma-service.mock.ts`). Every mocked method has a default `mockResolvedValue` built from random mock data, so tests only override what they assert on.
