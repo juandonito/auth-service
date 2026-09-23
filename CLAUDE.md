@@ -41,6 +41,12 @@ src/
 - Tests: `<file>.spec.ts` next to the file; e2e in `test/<domain>.e2e-spec.ts`.
 - Prisma: models PascalCase singular, fields camelCase. Env vars: UPPER_SNAKE_CASE.
 
+## Environment variables
+
+- Always read env vars through `ConfigService`, never raw `process.env`.
+- Required vars with no safe default (e.g. `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`) must use `configService.getOrThrow(...)` so the app fails fast rather than silently continuing with `undefined`.
+- Optional vars with a sensible default (e.g. `PORT`) use `configService.get('X', default)`, not `process.env.X ?? default`.
+
 ## Rules
 
 @.claude/rules/testing.md
