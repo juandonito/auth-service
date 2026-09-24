@@ -1,17 +1,28 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
-  @Transform(({ value }: { value: unknown }) =>
+  @Transform(({ value }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
   @IsEmail()
   email: string;
 
   @IsString()
-  @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{9,128}$/, {
-    message:
-      'password must be 9-128 characters and contain an uppercase letter, a lowercase letter and a digit',
+  @MinLength(9, { message: 'password must be at least 9 characters' })
+  @MaxLength(128, { message: 'password must be at most 128 characters' })
+  @Matches(/[a-z]/, {
+    message: 'password must contain a lowercase letter',
   })
+  @Matches(/[A-Z]/, {
+    message: 'password must contain an uppercase letter',
+  })
+  @Matches(/\d/, { message: 'password must contain a digit' })
   password: string;
 }
