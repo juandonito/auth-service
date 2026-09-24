@@ -6,63 +6,47 @@ import {
   generateMockJwtService,
   type MockJwtService,
 } from '../../../test/mock/jwt-service.mock';
-import {
-  generateMockPasswordHasher,
-  type MockPasswordHasher,
-} from '../../../test/mock/password-hasher.mock';
-import {
-  generateMockUserRepository,
-  type MockUserRepository,
-} from '../../../test/mock/user-repository.mock';
-import {
-  generateMockPublicUser,
-  generateMockUser,
-} from '../../../test/mock/user.mock';
+import { generateMockPublicUser } from '../../../test/mock/user.mock';
 import { EmailAlreadyExistsError } from '../../users/errors/email-already-exists.error';
-import { UserRepository } from '../../users/repositories/user.repository';
-import { PasswordHasher } from '../services/password-hasher.service';
-import { RegisterUseCase } from './register.usecase';
+import { CreateUserUseCase } from '../../users/usecases/create-user.usecase';
+import { RegisterUserUseCase } from './register-user.usecase';
 
-describe('RegisterUseCase', () => {
-  let useCase: RegisterUseCase;
-  let userRepository: MockUserRepository;
-  let passwordHasher: MockPasswordHasher;
+describe('RegisterUserUseCase', () => {
+  let useCase: RegisterUserUseCase;
+  let createUserUseCase: { execute: jest.Mock };
   let jwtService: MockJwtService;
 
   beforeEach(async () => {
-    userRepository = generateMockUserRepository();
-    passwordHasher = generateMockPasswordHasher();
+    createUserUseCase = {
+      execute: jest.fn().mockResolvedValue(generateMockPublicUser()),
+    };
     jwtService = generateMockJwtService();
     const moduleRef = await Test.createTestingModule({
       providers: [
-        RegisterUseCase,
-        { provide: UserRepository, useValue: userRepository },
-        { provide: PasswordHasher, useValue: passwordHasher },
+        RegisterUserUseCase,
+        { provide: CreateUserUseCase, useValue: createUserUseCase },
         { provide: JwtService, useValue: jwtService },
       ],
     }).compile();
 
-    useCase = moduleRef.get(RegisterUseCase);
+    useCase = moduleRef.get(RegisterUserUseCase);
   });
 
   describe('execute', () => {
-    it('should persist the user with the hashed password instead of the plaintext one', async () => {
+    it('should delegate user creation to CreateUserUseCase with the register email and password', async () => {
       const dto = generateMockRegisterDto();
-      const { passwordHash } = generateMockUser();
-      passwordHasher.hash.mockResolvedValue(passwordHash);
 
       await useCase.execute(dto);
 
-      expect(passwordHasher.hash).toHaveBeenCalledWith(dto.password);
-      expect(userRepository.create).toHaveBeenCalledWith({
+      expect(createUserUseCase.execute).toHaveBeenCalledWith({
         email: dto.email,
-        passwordHash,
+        password: dto.password,
       });
     });
 
     it('should sign the access token with the created user id and role', async () => {
       const user = generateMockPublicUser();
-      userRepository.create.mockResolvedValue(user);
+      createUserUseCase.execute.mockResolvedValue(user);
 
       await useCase.execute(generateMockRegisterDto());
 
@@ -82,7 +66,9 @@ describe('RegisterUseCase', () => {
     });
 
     it('should propagate EmailAlreadyExistsError without signing a token', async () => {
-      userRepository.create.mockRejectedValue(new EmailAlreadyExistsError());
+      createUserUseCase.execute.mockRejectedValue(
+        new EmailAlreadyExistsError(),
+      );
 
       await expect(
         useCase.execute(generateMockRegisterDto()),

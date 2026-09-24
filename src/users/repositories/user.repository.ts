@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
-import { Prisma, type User } from '../../generated/prisma/client';
+import { Prisma } from '../../generated/prisma/client';
+import type { CreateUserDto } from '../dto/create-user.dto';
+import type { PublicUser } from '../dto/public-user.dto';
 import { EmailAlreadyExistsError } from '../errors/email-already-exists.error';
-
-export type PublicUser = Pick<User, 'id' | 'email' | 'role'>;
 
 const PUBLIC_USER_SELECT = { id: true, email: true, role: true } as const;
 
@@ -11,9 +11,7 @@ const PUBLIC_USER_SELECT = { id: true, email: true, role: true } as const;
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    data: Pick<User, 'email' | 'passwordHash'>,
-  ): Promise<PublicUser> {
+  async create(data: CreateUserDto): Promise<PublicUser> {
     try {
       return await this.prisma.user.create({
         data,

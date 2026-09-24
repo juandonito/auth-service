@@ -1,11 +1,11 @@
 import { generateMockAccessToken } from './jwt-service.mock';
 
-export type MockRegisterUseCase = ReturnType<
-  typeof generateMockRegisterUseCase
+export type MockRegisterUserUseCase = ReturnType<
+  typeof generateMockRegisterUserUseCase
 >;
 
-/** RegisterUseCase double whose methods resolve to random data by default. */
-export function generateMockRegisterUseCase() {
+/** RegisterUserUseCase double whose methods resolve to random data by default. */
+export function generateMockRegisterUserUseCase() {
   return {
     execute: jest
       .fn()

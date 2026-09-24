@@ -3,8 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
-import { PasswordHasher } from './services/password-hasher.service';
-import { RegisterUseCase } from './usecases/register.usecase';
+import { RegisterUserUseCase } from './usecases/register-user.usecase';
 
 @Module({
   imports: [
@@ -18,6 +17,6 @@ import { RegisterUseCase } from './usecases/register.usecase';
     }),
   ],
   controllers: [AuthController],
-  providers: [RegisterUseCase, PasswordHasher],
+  providers: [RegisterUserUseCase],
 })
 export class AuthModule {}
