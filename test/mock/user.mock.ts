@@ -1,5 +1,5 @@
-import { Role, type User } from '../../src/generated/prisma/client';
-import type { PublicUser } from '../../src/users/dto/public-user.dto';
+import { Role, type User } from '@generated/prisma/client';
+import type { PublicUser } from '@users/dto/public-user.dto';
 import {
   generateRandomDate,
   generateRandomEmail,

@@ -1,4 +1,4 @@
-import { Prisma } from '../../src/generated/prisma/client';
+import { Prisma } from '@generated/prisma/client';
 import { generateRandomString, pickRandom } from './common.mock';
 
 export const PRISMA_UNIQUE_CONSTRAINT_CODE = 'P2002';

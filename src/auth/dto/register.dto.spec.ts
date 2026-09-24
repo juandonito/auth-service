@@ -3,11 +3,11 @@ import { validate } from 'class-validator';
 import {
   generateMockPassword,
   generateMockRegisterDto,
-} from '../../../test/mock/auth.mock';
+} from '@test/mock/auth.mock';
 import {
   generateRandomInt,
   generateRandomString,
-} from '../../../test/mock/common.mock';
+} from '@test/mock/common.mock';
 import { RegisterDto } from './register.dto';
 
 /** Mirrors what the global ValidationPipe does: transform, then validate. */

@@ -1,9 +1,9 @@
 import {
   generateMockArgumentsHost,
   generateMockHttpResponse,
-} from '../../../test/mock/arguments-host.mock';
-import { generateRandomString } from '../../../test/mock/common.mock';
-import { EmailAlreadyExistsError } from '../../users/errors/email-already-exists.error';
+} from '@test/mock/arguments-host.mock';
+import { generateRandomString } from '@test/mock/common.mock';
+import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { DomainError } from '../errors/domain.error';
 import { DomainExceptionFilter } from './domain-exception.filter';
 

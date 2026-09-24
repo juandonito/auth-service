@@ -2,16 +2,13 @@ import { Test } from '@nestjs/testing';
 import {
   generateMockPrismaKnownError,
   PRISMA_UNIQUE_CONSTRAINT_CODE,
-} from '../../../test/mock/prisma-error.mock';
+} from '@test/mock/prisma-error.mock';
 import {
   generateMockPrismaService,
   type MockPrismaService,
-} from '../../common/database/prisma.service.mock';
-import {
-  generateMockPublicUser,
-  generateMockUser,
-} from '../../../test/mock/user.mock';
-import { PrismaService } from '../../common/database/prisma.service';
+} from '@common/database/prisma.service.mock';
+import { generateMockPublicUser, generateMockUser } from '@test/mock/user.mock';
+import { PrismaService } from '@common/database/prisma.service';
 import { EmailAlreadyExistsError } from '../errors/email-already-exists.error';
 import { UserRepository } from './user.repository';
 

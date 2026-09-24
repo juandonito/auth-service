@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { generateMockPassword } from '../../../test/mock/auth.mock';
-import { generateRandomEmail } from '../../../test/mock/common.mock';
+import { generateMockPassword } from '@test/mock/auth.mock';
+import { generateRandomEmail } from '@test/mock/common.mock';
 import {
   generateMockUserRepository,
   type MockUserRepository,
@@ -9,10 +9,7 @@ import {
   generateMockPasswordHasher,
   type MockPasswordHasher,
 } from '../services/password-hasher.service.mock';
-import {
-  generateMockPublicUser,
-  generateMockUser,
-} from '../../../test/mock/user.mock';
+import { generateMockPublicUser, generateMockUser } from '@test/mock/user.mock';
 import { EmailAlreadyExistsError } from '../errors/email-already-exists.error';
 import { UserRepository } from '../repositories/user.repository';
 import { PasswordHasher } from '../services/password-hasher.service';

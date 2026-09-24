@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import {
   generateMockConfigService,
   type MockConfigService,
-} from '../../../test/mock/config-service.mock';
+} from '@test/mock/config-service.mock';
 import { PrismaService } from './prisma.service';
 
 describe('PrismaService', () => {

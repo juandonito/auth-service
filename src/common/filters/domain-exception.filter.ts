@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { STATUS_CODES } from 'node:http';
-import { EmailAlreadyExistsError } from '../../users/errors/email-already-exists.error';
+import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { DomainError } from '../errors/domain.error';
 
 /** The single place where business errors are mapped to HTTP status codes. */

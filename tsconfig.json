@@ -15,6 +15,13 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": ".",
+    "paths": {
+      "@common/*": ["./src/common/*"],
+      "@users/*": ["./src/users/*"],
+      "@auth/*": ["./src/auth/*"],
+      "@generated/*": ["./src/generated/*"],
+      "@test/*": ["./test/*"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,

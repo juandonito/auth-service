@@ -1,4 +1,4 @@
-import type { RegisterDto } from '../../src/auth/dto/register.dto';
+import type { RegisterDto } from '@auth/dto/register.dto';
 import {
   generateRandomEmail,
   generateRandomInt,
