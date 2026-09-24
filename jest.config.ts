@@ -17,13 +17,23 @@ const config: Config = {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
-  moduleNameMapper: pathsToModuleNameMapper(paths, { prefix: '<rootDir>/' }),
+  moduleNameMapper: {
+    // The generated Prisma client imports its siblings with `.js` suffixes.
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    ...pathsToModuleNameMapper(paths, { prefix: '<rootDir>/' }),
+  },
   collectCoverageFrom: [
     'src/**/*.(t|j)s',
     'libs/**/*.(t|j)s',
     'apps/**/*.(t|j)s',
+    '!src/generated/**',
+    '!src/main.ts',
+    '!src/**/*.module.ts',
   ],
   coverageDirectory: './coverage',
+  coverageThreshold: {
+    global: { branches: 75, functions: 90, lines: 90, statements: 90 },
+  },
   testEnvironment: 'node',
 };
 

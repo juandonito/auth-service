@@ -18,13 +18,15 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U authuser"
+          --health-cmd "pg_isready -U authuser -d authdb"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
       DATABASE_URL: postgresql://authuser:authpass@localhost:5432/authdb
+      JWT_SECRET: ci-test-secret
+      JWT_EXPIRES_IN: 15m
 
     steps:
       - uses: actions/checkout@v4
@@ -40,13 +42,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm exec prisma generate --config prisma7.config.ts
+
       - run: pnpm run lint
 
       - run: pnpm exec prettier --check "src/**/*.ts" "test/**/*.ts"
 
-      - run: pnpm exec prisma migrate deploy
+      - run: pnpm exec prisma migrate deploy --config prisma7.config.ts
 
-      - run: pnpm run test
+      - run: pnpm run test:cov
 
       - run: pnpm run test:e2e
 
