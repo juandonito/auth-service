@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
-import { generateMockRegisterDto } from '../../test/mock/auth.mock';
-import { generateMockAccessToken } from '../../test/mock/jwt-service.mock';
+import { generateMockRegisterDto } from '@test/mock/auth.mock';
+import { generateMockAccessToken } from '@test/mock/jwt-service.mock';
 import {
   generateMockRegisterUserUseCase,
   type MockRegisterUserUseCase,
 } from './usecases/register-user.usecase.mock';
-import { EmailAlreadyExistsError } from '../users/errors/email-already-exists.error';
+import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { AuthController } from './auth.controller';
 import { RegisterUserUseCase } from './usecases/register-user.usecase';
 

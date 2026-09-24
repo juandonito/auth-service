@@ -1,4 +1,4 @@
-import { generateMockUser } from '../../../test/mock/user.mock';
+import { generateMockUser } from '@test/mock/user.mock';
 
 export type MockPasswordHasher = ReturnType<typeof generateMockPasswordHasher>;
 

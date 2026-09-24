@@ -4,8 +4,8 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/common/database/prisma.service';
-import { Role } from '../src/generated/prisma/client';
+import { PrismaService } from '@common/database/prisma.service';
+import { Role } from '@generated/prisma/client';
 import {
   generateMockPassword,
   generateMockRegisterDto,

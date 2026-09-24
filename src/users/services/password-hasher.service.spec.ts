@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { generateMockPassword } from '../../../test/mock/auth.mock';
+import { generateMockPassword } from '@test/mock/auth.mock';
 import { PasswordHasher } from './password-hasher.service';
 
 describe('PasswordHasher', () => {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/database/prisma.service';
-import { Prisma } from '../../generated/prisma/client';
+import { PrismaService } from '@common/database/prisma.service';
+import { Prisma } from '@generated/prisma/client';
 import type { CreateUserDto } from '../dto/create-user.dto';
 import type { PublicUser } from '../dto/public-user.dto';
 import { EmailAlreadyExistsError } from '../errors/email-already-exists.error';

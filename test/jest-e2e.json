@@ -7,6 +7,11 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@common/(.*)$": "<rootDir>/../src/common/$1",
+    "^@users/(.*)$": "<rootDir>/../src/users/$1",
+    "^@auth/(.*)$": "<rootDir>/../src/auth/$1",
+    "^@generated/(.*)$": "<rootDir>/../src/generated/$1",
+    "^@test/(.*)$": "<rootDir>/$1"
   }
 }

@@ -1,14 +1,14 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { generateMockRegisterDto } from '../../../test/mock/auth.mock';
+import { generateMockRegisterDto } from '@test/mock/auth.mock';
 import {
   generateMockAccessToken,
   generateMockJwtService,
   type MockJwtService,
-} from '../../../test/mock/jwt-service.mock';
-import { generateMockPublicUser } from '../../../test/mock/user.mock';
-import { EmailAlreadyExistsError } from '../../users/errors/email-already-exists.error';
-import { CreateUserUseCase } from '../../users/usecases/create-user.usecase';
+} from '@test/mock/jwt-service.mock';
+import { generateMockPublicUser } from '@test/mock/user.mock';
+import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
+import { CreateUserUseCase } from '@users/usecases/create-user.usecase';
 import { RegisterUserUseCase } from './register-user.usecase';
 
 describe('RegisterUserUseCase', () => {
