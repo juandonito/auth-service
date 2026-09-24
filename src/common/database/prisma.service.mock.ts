@@ -1,4 +1,4 @@
-import { generateMockPublicUser } from './user.mock';
+import { generateMockPublicUser } from '../../../test/mock/user.mock';
 
 export type MockPrismaService = ReturnType<typeof generateMockPrismaService>;
 

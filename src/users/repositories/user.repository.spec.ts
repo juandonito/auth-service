@@ -6,7 +6,7 @@ import {
 import {
   generateMockPrismaService,
   type MockPrismaService,
-} from '../../../test/mock/prisma-service.mock';
+} from '../../common/database/prisma.service.mock';
 import {
   generateMockPublicUser,
   generateMockUser,

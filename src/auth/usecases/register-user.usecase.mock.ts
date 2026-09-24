@@ -1,4 +1,4 @@
-import { generateMockAccessToken } from './jwt-service.mock';
+import { generateMockAccessToken } from '../../../test/mock/jwt-service.mock';
 
 export type MockRegisterUserUseCase = ReturnType<
   typeof generateMockRegisterUserUseCase

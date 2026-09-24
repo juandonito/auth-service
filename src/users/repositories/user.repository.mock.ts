@@ -1,4 +1,4 @@
-import { generateMockPublicUser } from './user.mock';
+import { generateMockPublicUser } from '../../../test/mock/user.mock';
 
 export type MockUserRepository = ReturnType<typeof generateMockUserRepository>;
 

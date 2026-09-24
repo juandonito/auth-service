@@ -2,13 +2,13 @@ import { Test } from '@nestjs/testing';
 import { generateMockPassword } from '../../../test/mock/auth.mock';
 import { generateRandomEmail } from '../../../test/mock/common.mock';
 import {
-  generateMockPasswordHasher,
-  type MockPasswordHasher,
-} from '../../../test/mock/password-hasher.mock';
-import {
   generateMockUserRepository,
   type MockUserRepository,
-} from '../../../test/mock/user-repository.mock';
+} from '../repositories/user.repository.mock';
+import {
+  generateMockPasswordHasher,
+  type MockPasswordHasher,
+} from '../services/password-hasher.service.mock';
 import {
   generateMockPublicUser,
   generateMockUser,

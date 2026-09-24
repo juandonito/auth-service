@@ -4,7 +4,7 @@ import { generateMockAccessToken } from '../../test/mock/jwt-service.mock';
 import {
   generateMockRegisterUserUseCase,
   type MockRegisterUserUseCase,
-} from '../../test/mock/register-usecase.mock';
+} from './usecases/register-user.usecase.mock';
 import { EmailAlreadyExistsError } from '../users/errors/email-already-exists.error';
 import { AuthController } from './auth.controller';
 import { RegisterUserUseCase } from './usecases/register-user.usecase';
