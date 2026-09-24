@@ -28,10 +28,11 @@ const config: Config = {
     'apps/**/*.(t|j)s',
     '!src/generated/**',
     '!src/main.ts',
+    '!src/**/*.module.ts',
   ],
   coverageDirectory: './coverage',
   coverageThreshold: {
-    global: { branches: 80, functions: 80, lines: 80, statements: 80 },
+    global: { branches: 75, functions: 90, lines: 90, statements: 90 },
   },
   testEnvironment: 'node',
 };

@@ -3,7 +3,7 @@
 - TDD: write a failing test before implementation code, for every new behavior.
 - Unit tests: `*.spec.ts`, no real database — mock Prisma calls.
 - E2E tests: `*.e2e-spec.ts`, run against real Postgres (via Docker Compose locally, via CI service container in GitHub Actions).
-- Coverage threshold: 80%, enforced in CI.
+- Coverage threshold, enforced in CI: statements/lines 90%, functions 90%, branches 75%. Branches sits lower because `emitDecoratorMetadata` (required for NestJS DI) makes TypeScript emit an unreachable guard branch for every constructor-injected dependency; module wiring files (`*.module.ts`) are excluded from coverage entirely since they hold no logic.
 - lint-staged runs `--findRelatedTests` on pre-commit (scoped, fast) — full suite only runs pre-push and in CI, never on every commit.
 - Test names follow `should + verb + complement`, e.g. `it('should reject a password without a digit')`.
 - Test data comes from `test/mock/`, one file per kind of object (e.g. `user.mock.ts`). Each file exports generators like `generateMockUser(overrides?)` and `generateMockUsersList(count, overrides?)`. Don't write object literals inline in specs.
