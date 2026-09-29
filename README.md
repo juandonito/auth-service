@@ -9,19 +9,20 @@ This service handles registration, login, and access control (roles) for other a
 ## 🛠️ Tech stack
 
 - **Framework**: [NestJS](https://nestjs.com/) (TypeScript)
-- **Package manager**: [pnpm](https://pnpm.io/) `12.4.2`
-- **Database**: PostgreSQL 16
-- **ORM**: Prisma _(coming soon)_
-- **Authentication**: JWT (access + refresh tokens) _(coming soon)_
+- **Package manager**: [pnpm](https://pnpm.io/)
+- **Database**: PostgreSQL 18
+- **ORM**: [Prisma](https://www.prisma.io/) 7 (config in `prisma7.config.ts`, schema in `prisma/schema.prisma`)
+- **Authentication**: JWT via `@nestjs/jwt` (registration implemented; login and refresh tokens coming soon)
 - **Containerization**: Docker & Docker Compose
-- **Testing**: Jest
-- **CI/CD**: GitHub Actions _(coming soon)_
+- **Testing**: Jest (unit + e2e), coverage thresholds enforced in CI
+- **Linting/formatting**: oxlint + Prettier, enforced via Husky/lint-staged on commit
+- **CI/CD**: GitHub Actions (lint, format check, Prisma migrations, tests, build on every PR)
 
 ## 📋 Prerequisites
 
 - [Docker](https://www.docker.com/) and Docker Compose
-- [Node.js](https://nodejs.org/) 20+ (for local development outside containers, optional)
-- [pnpm](https://pnpm.io/installation) `12.4.2` (if developing outside a container)
+- [Node.js](https://nodejs.org/) 24+ (for local development outside containers, optional)
+- [pnpm](https://pnpm.io/installation) (if developing outside a container)
 
 ## 🚀 Quick start
 
@@ -47,23 +48,31 @@ docker compose down -v
 
 ## 🔧 Environment variables
 
-| Variable       | Description               | Example                                         |
-| -------------- | ------------------------- | ----------------------------------------------- |
-| `DATABASE_URL` | PostgreSQL connection URL | `postgresql://authuser:authpass@db:5432/authdb` |
+| Variable          | Description                              | Example                                         |
+| ----------------- | ----------------------------------------- | ------------------------------------------------ |
+| `DATABASE_URL`    | PostgreSQL connection URL                 | `postgresql://authuser:authpass@db:5432/authdb` |
+| `JWT_SECRET`      | Secret used to sign JWTs                  | `change-me`                                     |
+| `JWT_EXPIRES_IN`  | Access token expiry                       | `15m`                                            |
+| `PORT`            | *(optional, defaults to `3000`)* HTTP port the API listens on | `3000`                    |
 
-These variables are already configured in `docker-compose.yml` for local development. For a real deployment, they must be supplied by the target environment (never commit real sensitive values).
+`DATABASE_URL`, `JWT_SECRET`, and `JWT_EXPIRES_IN` are already configured in `docker-compose.yaml` for local development. For a real deployment, they must be supplied by the target environment (never commit real sensitive values). See `.env.exemple` for a template.
 
 ## 📦 Available scripts
 
-| Command              | Description                                        |
-| -------------------- | -------------------------------------------------- |
-| `pnpm run start`     | Starts the application                             |
-| `pnpm run start:dev` | Starts the application in watch mode (auto-reload) |
-| `pnpm run build`     | Compiles the TypeScript project                    |
-| `pnpm run test`      | Runs unit tests                                    |
-| `pnpm run test:e2e`  | Runs end-to-end tests                              |
-| `pnpm run test:cov`  | Runs tests with a coverage report                  |
-| `pnpm run lint`      | Lints the code with ESLint                         |
+| Command                | Description                                        |
+| ----------------------- | -------------------------------------------------- |
+| `pnpm run start`        | Starts the application                             |
+| `pnpm run start:dev`    | Starts the application in watch mode (auto-reload) |
+| `pnpm run start:debug`  | Starts the application in debug + watch mode       |
+| `pnpm run start:prod`   | Runs the compiled build (`dist/main.js`)           |
+| `pnpm run build`        | Compiles the TypeScript project                    |
+| `pnpm run test`         | Runs unit tests                                    |
+| `pnpm run test:watch`   | Runs unit tests in watch mode                      |
+| `pnpm run test:cov`     | Runs tests with a coverage report                  |
+| `pnpm run test:debug`   | Runs unit tests with the Node debugger attached    |
+| `pnpm run test:e2e`     | Runs end-to-end tests against a real Postgres      |
+| `pnpm run lint`         | Lints the code with oxlint (type-aware)            |
+| `pnpm run format`       | Formats `src/` and `test/` with Prettier           |
 
 ## 🏗️ Local development without Docker
 
@@ -79,6 +88,13 @@ Start only the database via Docker:
 docker compose up db
 ```
 
+Generate the Prisma client and apply migrations:
+
+```bash
+pnpm exec prisma generate --config prisma7.config.ts
+pnpm exec prisma migrate deploy --config prisma7.config.ts
+```
+
 Then run the API locally:
 
 ```bash
@@ -90,30 +106,35 @@ pnpm run start:dev
 ```
 auth-service/
 ├── src/
-│   ├── main.ts              # Application entry point
-│   ├── app.module.ts         # Root module
-│   └── ...                   # Upcoming modules (auth, users)
-├── test/                     # End-to-end tests
-├── docker-compose.yml         # API + Postgres orchestration
+│   ├── main.ts                # Application entry point
+│   ├── app.module.ts          # Root module
+│   ├── common/                # Global infrastructure (Prisma service, error filters)
+│   ├── users/                 # Users domain (repository, password hashing, create-user usecase)
+│   ├── auth/                  # Auth domain (controller, register usecase, DTOs)
+│   └── generated/prisma/      # Generated Prisma client (do not edit)
+├── prisma/
+│   ├── schema.prisma          # Prisma schema (models)
+│   └── migrations/            # Prisma migrations
+├── prisma7.config.ts          # Prisma 7 config (schema path, migrations, datasource)
+├── test/                      # End-to-end tests
+├── docker-compose.yaml        # API + Postgres orchestration
 ├── Dockerfile                 # Production image for the API
-├── pnpm-workspace.yaml         # pnpm configuration (allowBuilds)
+├── pnpm-workspace.yaml        # pnpm configuration (allowBuilds)
 └── package.json
 ```
-
-_This section will be updated as the `auth` and `users` modules are added, along with the Prisma integration._
 
 ## 🗺️ Roadmap
 
 - [x] NestJS scaffolding + Dockerfile
 - [x] Docker Compose (API + PostgreSQL)
 - [x] Prisma integration + database schema
-- [x] basic CI/CD pipeline
-- [ ] `register` / `login` endpoints with password hashing
-- [ ] JWT generation and validation (access + refresh tokens)
+- [x] CI/CD pipeline (GitHub Actions: lint, format, migrate, test, build)
+- [x] `register` endpoint with password hashing
+- [ ] `login` endpoint
+- [ ] JWT refresh tokens
 - [ ] NestJS guards + RBAC (user/admin roles)
 - [ ] Protected `/me` endpoint
-- [ ] Unit and integration tests
-- [ ] CI/CD pipeline (GitHub Actions) with Docker image build and push
+- [ ] CI/CD: Docker image build and push
 - [ ] _(Bonus)_ OAuth2 (Google login)
 - [ ] _(Bonus)_ Refresh token revocation
 - [ ] _(Bonus)_ Rate limiting on sensitive endpoints
