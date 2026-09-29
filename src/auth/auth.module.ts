@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '@users/users.module';
 import { AuthController } from './auth.controller';
+import { TokenIssuer } from './services/token-issuer.service';
 import { RegisterUserUseCase } from './usecases/register-user.usecase';
 
 @Module({
@@ -17,6 +18,6 @@ import { RegisterUserUseCase } from './usecases/register-user.usecase';
     }),
   ],
   controllers: [AuthController],
-  providers: [RegisterUserUseCase],
+  providers: [RegisterUserUseCase, TokenIssuer],
 })
 export class AuthModule {}
