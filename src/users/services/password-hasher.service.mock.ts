@@ -7,5 +7,6 @@ export function generateMockPasswordHasher() {
   return {
     hash: jest.fn().mockResolvedValue(generateMockUser().passwordHash),
     verify: jest.fn().mockResolvedValue(true),
+    verifyDummy: jest.fn().mockResolvedValue(undefined),
   };
 }

@@ -51,4 +51,33 @@ describe('PasswordHasher', () => {
       );
     });
   });
+
+  describe('verifyDummy', () => {
+    it('should run an argon2 verification against an argon2id hash', async () => {
+      const verify = jest.spyOn(hasher, 'verify');
+      const password = generateMockPassword();
+
+      await hasher.verifyDummy(password);
+
+      expect(verify).toHaveBeenCalledWith(
+        expect.stringMatching(/^\$argon2id\$/),
+        password,
+      );
+    });
+
+    it('should never leak whether the password matched', async () => {
+      await expect(
+        hasher.verifyDummy(generateMockPassword()),
+      ).resolves.toBeUndefined();
+    });
+
+    it('should verify against the same dummy hash on every call', async () => {
+      const verify = jest.spyOn(hasher, 'verify');
+
+      await hasher.verifyDummy(generateMockPassword());
+      await hasher.verifyDummy(generateMockPassword());
+
+      expect(verify.mock.calls[0][0]).toBe(verify.mock.calls[1][0]);
+    });
+  });
 });
