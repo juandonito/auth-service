@@ -3,6 +3,7 @@ import {
   generateMockHttpResponse,
 } from '@test/mock/arguments-host.mock';
 import { generateRandomString } from '@test/mock/common.mock';
+import { InvalidCredentialsError } from '@auth/errors/invalid-credentials.error';
 import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { DomainError } from '../errors/domain.error';
 import { DomainExceptionFilter } from './domain-exception.filter';
@@ -23,6 +24,22 @@ describe('DomainExceptionFilter', () => {
       statusCode: 409,
       error: 'Conflict',
       message: error.message,
+    });
+  });
+
+  it('should respond 401 Unauthorized with "invalid credentials" for InvalidCredentialsError', () => {
+    const response = generateMockHttpResponse();
+
+    filter.catch(
+      new InvalidCredentialsError(),
+      generateMockArgumentsHost(response),
+    );
+
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(response.json).toHaveBeenCalledWith({
+      statusCode: 401,
+      error: 'Unauthorized',
+      message: 'invalid credentials',
     });
   });
 
