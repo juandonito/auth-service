@@ -33,10 +33,8 @@ src/
 
 ## Imports
 
-- Cross-module imports use path aliases instead of relative `../../` traversal: `@common/*`, `@users/*`, `@auth/*`, `@generated/*` (the generated Prisma client), and `@test/*` (for `test/mock/*` helpers). Defined in `tsconfig.json`'s `compilerOptions.paths`.
-- Within the same module, keep plain relative imports (e.g. a usecase importing a sibling DTO with `./`).
-- TypeScript's `nodenext` module resolution rewrites these aliases to real relative paths at compile time, so `dist/` needs no extra runtime resolution (no `tsc-alias`/`tsconfig-paths` required).
-- Jest resolves the same aliases automatically: `jest.config.ts` reads `paths` from `tsconfig.json`, and `test/jest-e2e.json` mirrors them by hand.
+- Cross-module imports use path aliases instead of relative `../../` traversal: `@common/*`, `@users/*`, `@auth/*`, `@generated/*`, `@test/*`. Defined in `tsconfig.json`'s `compilerOptions.paths`.
+- Within the same module, keep plain relative imports.
 
 ## Naming conventions
 
