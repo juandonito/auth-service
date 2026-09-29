@@ -56,3 +56,4 @@ src/
 
 @.claude/rules/testing.md
 @.claude/rules/database.md
+@.claude/rules/workflow.md
