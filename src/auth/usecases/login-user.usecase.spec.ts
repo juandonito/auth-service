@@ -7,35 +7,35 @@ import {
   generateMockUserRepository,
   type MockUserRepository,
 } from '@users/repositories/user.repository.mock';
-import { PasswordHasher } from '@users/services/password-hasher.service';
+import { PasswordHasherService } from '@users/services/password-hasher.service';
 import {
-  generateMockPasswordHasher,
-  type MockPasswordHasher,
+  generateMockPasswordHasherService,
+  type MockPasswordHasherService,
 } from '@users/services/password-hasher.service.mock';
 import { InvalidCredentialsError } from '../errors/invalid-credentials.error';
-import { TokenIssuer } from '../services/token-issuer.service';
+import { TokenIssuerService } from '../services/token-issuer.service';
 import {
-  generateMockTokenIssuer,
-  type MockTokenIssuer,
+  generateMockTokenIssuerService,
+  type MockTokenIssuerService,
 } from '../services/token-issuer.service.mock';
 import { LoginUserUseCase } from './login-user.usecase';
 
 describe('LoginUserUseCase', () => {
   let useCase: LoginUserUseCase;
   let userRepository: MockUserRepository;
-  let passwordHasher: MockPasswordHasher;
-  let tokenIssuer: MockTokenIssuer;
+  let passwordHasher: MockPasswordHasherService;
+  let tokenIssuer: MockTokenIssuerService;
 
   beforeEach(async () => {
     userRepository = generateMockUserRepository();
-    passwordHasher = generateMockPasswordHasher();
-    tokenIssuer = generateMockTokenIssuer();
+    passwordHasher = generateMockPasswordHasherService();
+    tokenIssuer = generateMockTokenIssuerService();
     const moduleRef = await Test.createTestingModule({
       providers: [
         LoginUserUseCase,
         { provide: UserRepository, useValue: userRepository },
-        { provide: PasswordHasher, useValue: passwordHasher },
-        { provide: TokenIssuer, useValue: tokenIssuer },
+        { provide: PasswordHasherService, useValue: passwordHasher },
+        { provide: TokenIssuerService, useValue: tokenIssuer },
       ],
     }).compile();
 

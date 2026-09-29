@@ -1,9 +1,11 @@
 import { generateMockAccessToken } from '@test/mock/jwt-service.mock';
 
-export type MockTokenIssuer = ReturnType<typeof generateMockTokenIssuer>;
+export type MockTokenIssuerService = ReturnType<
+  typeof generateMockTokenIssuerService
+>;
 
-/** TokenIssuer double whose methods resolve to random data by default. */
-export function generateMockTokenIssuer() {
+/** TokenIssuerService double whose methods resolve to random data by default. */
+export function generateMockTokenIssuerService() {
   return {
     issue: jest
       .fn()

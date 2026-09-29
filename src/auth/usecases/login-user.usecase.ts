@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@users/repositories/user.repository';
-import { PasswordHasher } from '@users/services/password-hasher.service';
+import { PasswordHasherService } from '@users/services/password-hasher.service';
 import type { AccessTokenDto } from '../dto/access-token.dto';
 import type { LoginDto } from '../dto/login.dto';
 import { InvalidCredentialsError } from '../errors/invalid-credentials.error';
-import { TokenIssuer } from '../services/token-issuer.service';
+import { TokenIssuerService } from '../services/token-issuer.service';
 
 @Injectable()
 export class LoginUserUseCase {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly passwordHasher: PasswordHasher,
-    private readonly tokenIssuer: TokenIssuer,
+    private readonly passwordHasher: PasswordHasherService,
+    private readonly tokenIssuer: TokenIssuerService,
   ) {}
 
   async execute({ email, password }: LoginDto): Promise<AccessTokenDto> {

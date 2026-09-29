@@ -7,7 +7,7 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '@common/database/prisma.service';
 import { Role } from '@generated/prisma/client';
-import { PasswordHasher } from '@users/services/password-hasher.service';
+import { PasswordHasherService } from '@users/services/password-hasher.service';
 import { generateMockLoginDto, generateMockPassword } from './mock/auth.mock';
 import { generateRandomEmail, generateRandomString } from './mock/common.mock';
 
@@ -25,7 +25,7 @@ describe('POST /auth/login (e2e)', () => {
   const seedUser = async (role: Role = Role.USER) => {
     const { email, password } = generateMockLoginDto();
     const passwordHash = await app
-      .get(PasswordHasher, { strict: false })
+      .get(PasswordHasherService, { strict: false })
       .hash(password);
     seededEmails.push(email);
     const user = await prisma.user.create({

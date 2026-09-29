@@ -5,7 +5,7 @@ import type { AccessTokenDto } from '../dto/access-token.dto';
 
 /** The only place that knows the access token payload shape. */
 @Injectable()
-export class TokenIssuer {
+export class TokenIssuerService {
   constructor(private readonly jwtService: JwtService) {}
 
   async issue({

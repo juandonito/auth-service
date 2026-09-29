@@ -1,16 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { generateMockPassword } from '@test/mock/auth.mock';
-import { PasswordHasher } from './password-hasher.service';
+import { PasswordHasherService } from './password-hasher.service';
 
-describe('PasswordHasher', () => {
-  let hasher: PasswordHasher;
+describe('PasswordHasherService', () => {
+  let hasher: PasswordHasherService;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [PasswordHasher],
+      providers: [PasswordHasherService],
     }).compile();
 
-    hasher = moduleRef.get(PasswordHasher);
+    hasher = moduleRef.get(PasswordHasherService);
   });
 
   describe('hash', () => {

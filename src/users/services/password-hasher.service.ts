@@ -3,7 +3,7 @@ import * as argon2 from 'argon2';
 import { randomBytes } from 'node:crypto';
 
 @Injectable()
-export class PasswordHasher {
+export class PasswordHasherService {
   /**
    * Hash of a throwaway password, started at construction so no request pays
    * for it. Built by `hash`, so it always has the same argon2 parameters as

@@ -6,19 +6,22 @@ import {
   type MockJwtService,
 } from '@test/mock/jwt-service.mock';
 import { generateMockUser } from '@test/mock/user.mock';
-import { TokenIssuer } from './token-issuer.service';
+import { TokenIssuerService } from './token-issuer.service';
 
-describe('TokenIssuer', () => {
-  let tokenIssuer: TokenIssuer;
+describe('TokenIssuerService', () => {
+  let tokenIssuer: TokenIssuerService;
   let jwtService: MockJwtService;
 
   beforeEach(async () => {
     jwtService = generateMockJwtService();
     const moduleRef = await Test.createTestingModule({
-      providers: [TokenIssuer, { provide: JwtService, useValue: jwtService }],
+      providers: [
+        TokenIssuerService,
+        { provide: JwtService, useValue: jwtService },
+      ],
     }).compile();
 
-    tokenIssuer = moduleRef.get(TokenIssuer);
+    tokenIssuer = moduleRef.get(TokenIssuerService);
   });
 
   describe('issue', () => {

@@ -6,28 +6,28 @@ import {
   type MockUserRepository,
 } from '../repositories/user.repository.mock';
 import {
-  generateMockPasswordHasher,
-  type MockPasswordHasher,
+  generateMockPasswordHasherService,
+  type MockPasswordHasherService,
 } from '../services/password-hasher.service.mock';
 import { generateMockPublicUser, generateMockUser } from '@test/mock/user.mock';
 import { EmailAlreadyExistsError } from '../errors/email-already-exists.error';
 import { UserRepository } from '../repositories/user.repository';
-import { PasswordHasher } from '../services/password-hasher.service';
+import { PasswordHasherService } from '../services/password-hasher.service';
 import { CreateUserUseCase } from './create-user.usecase';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let userRepository: MockUserRepository;
-  let passwordHasher: MockPasswordHasher;
+  let passwordHasher: MockPasswordHasherService;
 
   beforeEach(async () => {
     userRepository = generateMockUserRepository();
-    passwordHasher = generateMockPasswordHasher();
+    passwordHasher = generateMockPasswordHasherService();
     const moduleRef = await Test.createTestingModule({
       providers: [
         CreateUserUseCase,
         { provide: UserRepository, useValue: userRepository },
-        { provide: PasswordHasher, useValue: passwordHasher },
+        { provide: PasswordHasherService, useValue: passwordHasher },
       ],
     }).compile();
 

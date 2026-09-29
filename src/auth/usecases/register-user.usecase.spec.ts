@@ -4,28 +4,28 @@ import { generateMockAccessToken } from '@test/mock/jwt-service.mock';
 import { generateMockPublicUser } from '@test/mock/user.mock';
 import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { CreateUserUseCase } from '@users/usecases/create-user.usecase';
-import { TokenIssuer } from '../services/token-issuer.service';
+import { TokenIssuerService } from '../services/token-issuer.service';
 import {
-  generateMockTokenIssuer,
-  type MockTokenIssuer,
+  generateMockTokenIssuerService,
+  type MockTokenIssuerService,
 } from '../services/token-issuer.service.mock';
 import { RegisterUserUseCase } from './register-user.usecase';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
   let createUserUseCase: { execute: jest.Mock };
-  let tokenIssuer: MockTokenIssuer;
+  let tokenIssuer: MockTokenIssuerService;
 
   beforeEach(async () => {
     createUserUseCase = {
       execute: jest.fn().mockResolvedValue(generateMockPublicUser()),
     };
-    tokenIssuer = generateMockTokenIssuer();
+    tokenIssuer = generateMockTokenIssuerService();
     const moduleRef = await Test.createTestingModule({
       providers: [
         RegisterUserUseCase,
         { provide: CreateUserUseCase, useValue: createUserUseCase },
-        { provide: TokenIssuer, useValue: tokenIssuer },
+        { provide: TokenIssuerService, useValue: tokenIssuer },
       ],
     }).compile();
 
