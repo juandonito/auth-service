@@ -1,4 +1,4 @@
-import { generateMockPublicUser } from '@test/mock/user.mock';
+import { generateMockPublicUser, generateMockUser } from '@test/mock/user.mock';
 
 export type MockPrismaService = ReturnType<typeof generateMockPrismaService>;
 
@@ -7,6 +7,7 @@ export function generateMockPrismaService() {
   return {
     user: {
       create: jest.fn().mockResolvedValue(generateMockPublicUser()),
+      findUnique: jest.fn().mockResolvedValue(generateMockUser()),
     },
   };
 }
