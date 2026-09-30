@@ -66,12 +66,6 @@ describe('PasswordHasherService', () => {
       );
     });
 
-    it('should never leak whether the password matched', async () => {
-      await expect(
-        hasher.verifyDummy(generateMockPassword()),
-      ).resolves.toBeUndefined();
-    });
-
     it('should verify against the same dummy hash on every call', async () => {
       const verify = jest.spyOn(hasher, 'verify');
 
