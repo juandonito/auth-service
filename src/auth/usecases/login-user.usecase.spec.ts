@@ -1,5 +1,7 @@
+import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { generateMockLoginDto } from '@test/mock/auth.mock';
+import { generateRandomString } from '@test/mock/common.mock';
 import { generateMockAccessToken } from '@test/mock/jwt-service.mock';
 import { generateMockUser } from '@test/mock/user.mock';
 import { UserRepository } from '@users/repositories/user.repository';
@@ -19,6 +21,9 @@ import {
   type MockTokenIssuerService,
 } from '../services/token-issuer.service.mock';
 import { LoginUserUseCase } from './login-user.usecase';
+
+const silenceLoggerError = () =>
+  jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
 describe('LoginUserUseCase', () => {
   let useCase: LoginUserUseCase;
@@ -123,6 +128,63 @@ describe('LoginUserUseCase', () => {
       await useCase.execute(generateMockLoginDto()).catch(() => undefined);
 
       expect(passwordHasher.verify).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the stored hash cannot be verified', () => {
+    let logError: ReturnType<typeof silenceLoggerError>;
+
+    beforeEach(() => {
+      passwordHasher.verify.mockRejectedValue(
+        new Error(generateRandomString()),
+      );
+      logError = silenceLoggerError();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should throw InvalidCredentialsError instead of the verification failure', async () => {
+      await expect(
+        useCase.execute(generateMockLoginDto()),
+      ).rejects.toBeInstanceOf(InvalidCredentialsError);
+    });
+
+    it('should not issue a token', async () => {
+      await useCase.execute(generateMockLoginDto()).catch(() => undefined);
+
+      expect(tokenIssuer.issue).not.toHaveBeenCalled();
+    });
+
+    it('should run the dummy verification so it costs the same as an unknown email', async () => {
+      const dto = generateMockLoginDto();
+
+      await useCase.execute(dto).catch(() => undefined);
+
+      expect(passwordHasher.verifyDummy).toHaveBeenCalledWith(dto.password);
+    });
+
+    it('should log the failure with the user id but neither the password nor the hash', async () => {
+      const user = generateMockUser();
+      const dto = generateMockLoginDto({ email: user.email });
+      userRepository.findByEmailWithPasswordHash.mockResolvedValue(user);
+
+      await useCase.execute(dto).catch(() => undefined);
+
+      const logged = JSON.stringify(logError.mock.calls);
+      expect(logError).toHaveBeenCalledTimes(1);
+      expect(logged).toContain(user.id);
+      expect(logged).not.toContain(dto.password);
+      expect(logged).not.toContain(user.passwordHash);
+    });
+
+    it('should also handle a rejection that is not an Error', async () => {
+      passwordHasher.verify.mockRejectedValue(generateRandomString());
+
+      await expect(
+        useCase.execute(generateMockLoginDto()),
+      ).rejects.toBeInstanceOf(InvalidCredentialsError);
     });
   });
 });

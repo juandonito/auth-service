@@ -131,6 +131,20 @@ describe('POST /auth/login (e2e)', () => {
     });
   });
 
+  it('should respond 401 "invalid credentials" when the stored hash is corrupt', async () => {
+    const { email, password } = generateMockLoginDto();
+    seededEmails.push(email);
+    await prisma.user.create({
+      data: { email, passwordHash: generateRandomString(20) },
+    });
+
+    const corruptHash = await login({ email, password });
+    const unknownEmail = await login(generateMockLoginDto());
+
+    expect(corruptHash.status).toBe(401);
+    expect(corruptHash.text).toBe(unknownEmail.text);
+  });
+
   it('should not reveal through the response whether the email exists', async () => {
     const { email } = await seedUser();
     const dto = generateMockLoginDto();
