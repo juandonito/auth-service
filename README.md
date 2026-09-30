@@ -12,7 +12,7 @@ This service handles registration, login, and access control (roles) for other a
 - **Package manager**: [pnpm](https://pnpm.io/)
 - **Database**: PostgreSQL 18
 - **ORM**: [Prisma](https://www.prisma.io/) 7 (config in `prisma7.config.ts`, schema in `prisma/schema.prisma`)
-- **Authentication**: JWT via `@nestjs/jwt` (registration implemented; login and refresh tokens coming soon)
+- **Authentication**: JWT via `@nestjs/jwt` (registration and login implemented; refresh tokens coming soon)
 - **Containerization**: Docker & Docker Compose
 - **Testing**: Jest (unit + e2e), coverage thresholds enforced in CI
 - **Linting/formatting**: oxlint + Prettier, enforced via Husky/lint-staged on commit
@@ -110,7 +110,7 @@ auth-service/
 │   ├── app.module.ts          # Root module
 │   ├── common/                # Global infrastructure (Prisma service, error filters)
 │   ├── users/                 # Users domain (repository, password hashing, create-user usecase)
-│   ├── auth/                  # Auth domain (controller, register usecase, DTOs)
+│   ├── auth/                  # Auth domain (controller, register/login usecases, token service, DTOs)
 │   └── generated/prisma/      # Generated Prisma client (do not edit)
 ├── prisma/
 │   ├── schema.prisma          # Prisma schema (models)
@@ -130,7 +130,7 @@ auth-service/
 - [x] Prisma integration + database schema
 - [x] CI/CD pipeline (GitHub Actions: lint, format, migrate, test, build)
 - [x] `register` endpoint with password hashing
-- [ ] `login` endpoint
+- [x] `login` endpoint
 - [ ] JWT refresh tokens
 - [ ] NestJS guards + RBAC (user/admin roles)
 - [ ] Protected `/me` endpoint

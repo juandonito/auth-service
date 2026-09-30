@@ -21,14 +21,15 @@ Standalone authentication/authorization microservice built with NestJS, designed
 ## Structure
 
 - Layers: controller → usecase → repository. Controllers handle HTTP only. Usecases hold business logic, one per action. Repositories are the only place that touches Prisma.
+- Services hold reusable helpers that are neither a business action nor persistence (e.g. `PasswordHasherService`, `TokenIssuerService`). They live in the `services/` folder of the domain that owns them. Every business class is either a usecase or a service.
 - One NestJS module per domain under `src/<domain>/`. A module exports what other modules need (e.g. `UsersModule` exports `UserRepository`).
 - Shared infrastructure lives in `src/common/` (`@Global() CommonModule`), e.g. `database/prisma.service.ts`.
 
 ```
 src/
-├─ common/   common.module.ts, database/prisma.service.ts
-├─ users/    users.module.ts, repositories/, errors/
-└─ auth/     auth.module.ts, controllers/, usecases/, dto/
+├─ common/   common.module.ts, database/prisma.service.ts, decorators/, errors/, filters/
+├─ users/    users.module.ts, repositories/, services/, usecases/, dto/, errors/
+└─ auth/     auth.module.ts, auth.controller.ts, usecases/, services/, dto/, errors/
 ```
 
 ## Imports
@@ -38,11 +39,11 @@ src/
 
 ## Naming conventions
 
-- Files: kebab-case with a type suffix: `*.module.ts`, `*.controller.ts`, `*.usecase.ts`, `*.repository.ts`, `*.service.ts` (common only), `*.dto.ts`, `*.error.ts`.
-- Classes: PascalCase + matching suffix: `RegisterUserUseCase`, `UserRepository`, `RegisterDto`, `EmailAlreadyExistsError`.
+- Files: kebab-case with a type suffix: `*.module.ts`, `*.controller.ts`, `*.usecase.ts`, `*.repository.ts`, `*.service.ts` (any domain), `*.dto.ts`, `*.error.ts`, plus `*.decorator.ts` and `*.filter.ts` in `common/`.
+- Classes: PascalCase + matching suffix: `RegisterUserUseCase`, `UserRepository`, `PasswordHasherService`, `RegisterDto`, `EmailAlreadyExistsError`.
 - Usecases: verb + noun, exposing a single `execute()` method.
-- Repositories: singular model name. Methods read like the query (`create`, `findByEmail`) and never return `passwordHash` unless the name says so.
-- Folders: domain modules are plural nouns (`users/`, `auth/`), with sub-folders grouped by layer (`controllers/`, `usecases/`, `repositories/`, `dto/`, `errors/`).
+- Repositories: singular model name. Methods read like the query (`create`, `findByEmail`) and never return `passwordHash` unless the name says so (e.g. `findByEmailWithPasswordHash`).
+- Folders: domain modules are plural nouns (`users/`, `auth/`), with sub-folders grouped by layer (`usecases/`, `services/`, `repositories/`, `dto/`, `errors/`). A module's controller sits at the module root (`auth/auth.controller.ts`).
 - Tests: `<file>.spec.ts` next to the file; e2e in `test/<domain>.e2e-spec.ts`.
 - Prisma: models PascalCase singular, fields camelCase. Env vars: UPPER_SNAKE_CASE.
 
