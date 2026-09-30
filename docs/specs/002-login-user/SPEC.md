@@ -15,6 +15,7 @@ A user can log into their account with their credentials.
 - Wrong email or wrong password returns a normalized 401 `{ statusCode, error, message: "invalid credentials" }`, raised as `InvalidCredentialsError` and mapped in `DomainExceptionFilter`
 - When the email is unknown, `PasswordHasherService.verifyDummy` still runs an argon2 verification against a dummy hash built by the hasher itself (same parameters as real hashes), so both 401 paths cost the same
 - If the dummy hash cannot be built, the application fails to start (`onModuleInit`) instead of failing on the first login
+- If the stored hash of an existing user cannot be verified (a corrupt value), the response is the same 401 as for an unknown email, the dummy verification still runs so the cost matches, and the failure is logged for the operator with the user id but never the password or the hash
 - JWT payload contains
 
 ```
@@ -41,6 +42,7 @@ A user can log into their account with their credentials.
 - [x] Wrong-email and wrong-password 401 responses are byte-identical (status and body)
 - [x] Unknown email still calls `PasswordHasherService.verifyDummy` with the login password, and `verifyDummy` verifies against an argon2id hash (unit tests; no wall-clock assertions)
 - [x] A failure to build the dummy hash makes `onModuleInit` reject (the application refuses to start)
+- [x] A corrupt stored hash returns the same 401 as an unknown email (byte-identical body), and the failure is logged without the password or the hash
 - [x] JWT verifies with the configured `JWT_SECRET`
 - [x] JWT expires after the configured `JWT_EXPIRES_IN`
 - [x] Malformed input returns 400, including an empty password and an extra field such as `role`
@@ -50,7 +52,7 @@ A user can log into their account with their credentials.
 
 ## Recap
 
-Shipped on `feature/002-login-user`: 14 commits before this recap, unit tests 76/76, e2e tests 30/30 (Postgres via Docker Compose), coverage 100% statements / 100% functions / 100% lines / 78.75% branches (threshold 75%). Lint, Prettier and build are clean. All 12 success criteria are met and covered by a passing unit or e2e test.
+Shipped on `feature/002-login-user` (PR #8): 16 commits before this recap, unit tests 81/81, e2e tests 31/31 (Postgres via Docker Compose), coverage 100% statements / 100% functions / 100% lines / 79.26% branches (threshold 75%). Lint, Prettier and build are clean. All 13 success criteria are met and covered by a passing unit or e2e test.
 
 **What we did**
 
@@ -59,19 +61,21 @@ Shipped on `feature/002-login-user`: 14 commits before this recap, unit tests 76
 - **Preparatory refactors first**, so login would not copy register's code: `TokenIssuerService` (the only place that knows the JWT payload) and the `@NormalizeEmail()` decorator (shared by `RegisterDto` and `LoginDto`).
 - **Then the feature itself**: `InvalidCredentialsError` mapped to 401 in `DomainExceptionFilter`, `UserRepository.findByEmailWithPasswordHash`, `LoginDto`, `PasswordHasherService.verifyDummy` and `LoginUserUseCase`, then `POST /auth/login` (`@HttpCode(200)`), then a 30-test e2e suite.
 - **Then a review pass over the whole branch**, which produced: helper classes renamed to `*Service`, a fail-fast dummy hash, one redundant test removed, and `CLAUDE.md` / `README.md` brought back in line with the code (see below).
+- **Then an automated review on the PR** (Copilot) found two more issues, both valid and both fixed: a corrupt stored hash made `argon2.verify` throw, so existing emails got a 500 while unknown emails got a 401, which leaks which accounts exist; and a sentence in this recap that wrongly claimed the lifecycle hook was removed.
 
 **What we learned**
 
 - **Read the previous feature's code before finalizing a spec.** The payload contradiction was only visible by reading `RegisterUserUseCase`.
 - **When a review says "extract the shared piece", carry it into the plan.** The first plan re-signed the JWT inside the login usecase, duplicating register, and was rejected as not DRY. The extraction had already been suggested in the spec review.
-- **Put security-relevant parameters with the class that owns them.** The dummy hash first lived in the usecase behind `onModuleInit`. Nest's `compile()` does not run lifecycle hooks, so forgetting the hook in a test means `verify(undefined, ...)` and a 500. Moving the dummy hash into the hasher (`verifyDummy`) removed the hook, the gotcha and the risk of the dummy drifting from the real argon2 parameters.
+- **Put security-relevant parameters with the class that owns them.** The dummy hash first lived in the usecase behind `onModuleInit`. Nest's `compile()` does not run lifecycle hooks, so forgetting the hook in a test means `verify(undefined, ...)` and a 500. Moving the dummy hash into the hasher (`verifyDummy`) removed the `verify(undefined, ...)` risk from the usecase and the risk of the dummy drifting from the real argon2 parameters. The hook did not disappear: it moved to the hasher, where it now also makes the application fail fast (next point).
 - **Fail fast, don't retry.** If `argon2.hash` rejects while building the dummy hash, the cause is a broken native binding or memory exhaustion: deterministic, and registration would be broken too. The promise is started at construction, marked handled in the constructor, and awaited in `onModuleInit`, so the application refuses to start. The red test proved the risk: without the guard, the rejected promise crashed the whole Jest process as an unhandled rejection.
 - **Every helper class is a `*Service` or a `*UseCase`, in any domain.** `PasswordHasher` and `TokenIssuer` became `PasswordHasherService` and `TokenIssuerService`; `CLAUDE.md` no longer says services are "common only".
 - **Test behavior, never wall-clock time, for timing protection.** The unit tests assert which method is called with what. The e2e suite asserts identical status and body for both 401 paths.
 - **Unknown-email and wrong-password parity has to hold in three places:** status, body, and cost.
+- **Enumerate what can throw in an auth path, not only what it returns.** "Normalized 401" has to cover exceptions too: a corrupt stored hash made `verify` throw, and a 500 only for existing emails is an account-existence signal. The fix catches the failure, logs it for the operator (user id only, never the password or hash), runs the dummy verification so the instant failure is not a timing signal, and answers the usual 401. The e2e test reproduced the leak against the real stack before the fix.
 - **Tooling gotchas.**
   - `jest.spyOn` cannot redefine properties on the `argon2` module namespace ("Cannot redefine property: verify"). Spy on the instance method instead.
-  - `restoreAllMocks` is unnecessary when the instance is rebuilt in `beforeEach`, but needed when spying on a class prototype.
+  - `restoreAllMocks` is unnecessary when the instance is rebuilt in `beforeEach`, but needed when spying on a class prototype (e.g. `Logger.prototype.error`): the prototype is shared, and repeated `spyOn` calls on it accumulate recorded calls, which breaks `toHaveBeenCalledTimes` assertions.
   - oxlint type-aware flagged `no-misused-spread` and `unbound-method` in new specs. Running lint after every step catches this early.
   - zsh does not word-split an unquoted variable, so `perl -pi ... $files` silently renamed nothing; use `xargs`. `git grep -E` does not understand `\b`, which made a "no leftovers" check pass falsely; use `grep -rnw`.
 - **Local ops.** The `db` container was already running, so the e2e suite needed no `docker compose` command. A transient auto-mode classifier failure on `git commit` resolved on retry. Amending is fine on an unpushed branch, but check for an upstream first.
@@ -85,6 +89,7 @@ Shipped on `feature/002-login-user`: 14 commits before this recap, unit tests 76
 - **The "no inline object literals" testing rule is bent in places**: `{ accessToken: ... }` results, `{ password: 12345 }`, `'a'.repeat(129)`. A `generateMockAccessTokenDto` helper would remove most of them.
 - **The repository mock default returns a full `User`** where `findByEmailWithPasswordHash` returns a `UserWithPasswordHash`.
 - **Unit and e2e work ended up in one commit** (the e2e file was amended into the endpoint commit). Separate commits would read better.
+- **A known leak was filed as a follow-up instead of fixed.** The corrupt-hash 500 was spotted during the branch review, recorded under "open flaws" and left out of the fixes offered, and an automated PR review then caught it. Anything that breaks the feature's own guarantee (here: no account-existence signal) is in scope, not a follow-up; the recap also claimed "all criteria met" while it was open.
 - **The docs had drifted before this feature.** `CLAUDE.md` said `*.service.ts` was common-only and listed an `auth/controllers/` folder that does not exist. Doc updates belong in the same PR as the change that outdates them.
 
 **Open flaws (not addressed here)**
@@ -93,7 +98,6 @@ Shipped on `feature/002-login-user`: 14 commits before this recap, unit tests 76
 - **The lowercase-email invariant is not enforced by the database.** Login relies on stored emails being lowercase (register guarantees it); a row created another way would be unreachable. A `citext` column or a lower-case unique index would enforce it.
 - **No rehash on login.** Hashes made with old argon2 parameters keep their old cost (`argon2.needsRehash` is not used), while the dummy hash uses the current parameters, so parity can drift after a tuning change.
 - **Brute force and CPU DoS.** Login is the natural target and argon2 is expensive. `MaxLength(128)` only bounds a single request. Rate limiting is a separate spec and should land before any real deployment.
-- **A corrupt stored hash makes `argon2.verify` throw**, which surfaces as a 500.
 - **JWT hardening.** No `iss` / `aud` claims, no revocation and no refresh tokens yet.
 - **The e2e suites write to whatever `DATABASE_URL` points at**, which is the dev database locally.
 - **Branch coverage headroom is thin** (78.75% against a 75% threshold), partly from the `emitDecoratorMetadata` guards described in the spec 001 recap.
