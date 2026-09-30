@@ -1,16 +1,17 @@
 import { Test } from '@nestjs/testing';
 import { generateMockPassword } from '@test/mock/auth.mock';
-import { PasswordHasher } from './password-hasher.service';
+import { generateRandomString } from '@test/mock/common.mock';
+import { PasswordHasherService } from './password-hasher.service';
 
-describe('PasswordHasher', () => {
-  let hasher: PasswordHasher;
+describe('PasswordHasherService', () => {
+  let hasher: PasswordHasherService;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [PasswordHasher],
+      providers: [PasswordHasherService],
     }).compile();
 
-    hasher = moduleRef.get(PasswordHasher);
+    hasher = moduleRef.get(PasswordHasherService);
   });
 
   describe('hash', () => {
@@ -49,6 +50,67 @@ describe('PasswordHasher', () => {
       await expect(hasher.verify(hash, generateMockPassword())).resolves.toBe(
         false,
       );
+    });
+  });
+
+  describe('verifyDummy', () => {
+    it('should run an argon2 verification against an argon2id hash', async () => {
+      const verify = jest.spyOn(hasher, 'verify');
+      const password = generateMockPassword();
+
+      await hasher.verifyDummy(password);
+
+      expect(verify).toHaveBeenCalledWith(
+        expect.stringMatching(/^\$argon2id\$/),
+        password,
+      );
+    });
+
+    it('should verify against the same dummy hash on every call', async () => {
+      const verify = jest.spyOn(hasher, 'verify');
+
+      await hasher.verifyDummy(generateMockPassword());
+      await hasher.verifyDummy(generateMockPassword());
+
+      expect(verify.mock.calls[0][0]).toBe(verify.mock.calls[1][0]);
+    });
+  });
+
+  describe('when the dummy hash cannot be built', () => {
+    let failure: Error;
+    let brokenHasher: PasswordHasherService;
+
+    beforeEach(() => {
+      failure = new Error(generateRandomString());
+      // Spies on the prototype (shared by every instance), so restore it below.
+      jest
+        .spyOn(PasswordHasherService.prototype, 'hash')
+        .mockRejectedValueOnce(failure);
+      brokenHasher = new PasswordHasherService();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should not throw at construction', () => {
+      expect(brokenHasher).toBeInstanceOf(PasswordHasherService);
+    });
+
+    it('should make onModuleInit reject so the application refuses to start', async () => {
+      await expect(brokenHasher.onModuleInit()).rejects.toBe(failure);
+    });
+
+    it('should make verifyDummy reject rather than skip the verification', async () => {
+      await expect(
+        brokenHasher.verifyDummy(generateMockPassword()),
+      ).rejects.toBe(failure);
+    });
+  });
+
+  describe('onModuleInit', () => {
+    it('should resolve once the dummy hash is built', async () => {
+      await expect(hasher.onModuleInit()).resolves.toBeUndefined();
     });
   });
 });

@@ -1,31 +1,31 @@
-import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { generateMockRegisterDto } from '@test/mock/auth.mock';
-import {
-  generateMockAccessToken,
-  generateMockJwtService,
-  type MockJwtService,
-} from '@test/mock/jwt-service.mock';
+import { generateMockAccessToken } from '@test/mock/jwt-service.mock';
 import { generateMockPublicUser } from '@test/mock/user.mock';
 import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { CreateUserUseCase } from '@users/usecases/create-user.usecase';
+import { TokenIssuerService } from '../services/token-issuer.service';
+import {
+  generateMockTokenIssuerService,
+  type MockTokenIssuerService,
+} from '../services/token-issuer.service.mock';
 import { RegisterUserUseCase } from './register-user.usecase';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
   let createUserUseCase: { execute: jest.Mock };
-  let jwtService: MockJwtService;
+  let tokenIssuer: MockTokenIssuerService;
 
   beforeEach(async () => {
     createUserUseCase = {
       execute: jest.fn().mockResolvedValue(generateMockPublicUser()),
     };
-    jwtService = generateMockJwtService();
+    tokenIssuer = generateMockTokenIssuerService();
     const moduleRef = await Test.createTestingModule({
       providers: [
         RegisterUserUseCase,
         { provide: CreateUserUseCase, useValue: createUserUseCase },
-        { provide: JwtService, useValue: jwtService },
+        { provide: TokenIssuerService, useValue: tokenIssuer },
       ],
     }).compile();
 
@@ -44,28 +44,25 @@ describe('RegisterUserUseCase', () => {
       });
     });
 
-    it('should sign the access token with the created user id and role', async () => {
+    it('should issue the access token for the created user', async () => {
       const user = generateMockPublicUser();
       createUserUseCase.execute.mockResolvedValue(user);
 
       await useCase.execute(generateMockRegisterDto());
 
-      expect(jwtService.signAsync).toHaveBeenCalledWith({
-        sub: user.id,
-        role: user.role,
-      });
+      expect(tokenIssuer.issue).toHaveBeenCalledWith(user);
     });
 
-    it('should return only the signed access token', async () => {
-      const accessToken = generateMockAccessToken();
-      jwtService.signAsync.mockResolvedValue(accessToken);
+    it('should return the issued access token', async () => {
+      const result = { accessToken: generateMockAccessToken() };
+      tokenIssuer.issue.mockResolvedValue(result);
 
-      const result = await useCase.execute(generateMockRegisterDto());
-
-      expect(result).toEqual({ accessToken });
+      await expect(useCase.execute(generateMockRegisterDto())).resolves.toEqual(
+        result,
+      );
     });
 
-    it('should propagate EmailAlreadyExistsError without signing a token', async () => {
+    it('should propagate EmailAlreadyExistsError without issuing a token', async () => {
       createUserUseCase.execute.mockRejectedValue(
         new EmailAlreadyExistsError(),
       );
@@ -73,7 +70,7 @@ describe('RegisterUserUseCase', () => {
       await expect(
         useCase.execute(generateMockRegisterDto()),
       ).rejects.toBeInstanceOf(EmailAlreadyExistsError);
-      expect(jwtService.signAsync).not.toHaveBeenCalled();
+      expect(tokenIssuer.issue).not.toHaveBeenCalled();
     });
   });
 });

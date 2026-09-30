@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { NormalizeEmail } from '@common/decorators/normalize-email.decorator';
 import {
   IsEmail,
   IsString,
@@ -8,9 +8,7 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @NormalizeEmail()
   @IsEmail()
   email: string;
 
