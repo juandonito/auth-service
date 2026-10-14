@@ -29,10 +29,10 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 
 ## Progress
 
-- [ ] **Step 1: Schema, migration, env** (approval-gated: `prisma migrate dev`, `prisma generate`)
-  - [ ] `RefreshToken` model and `User.refreshTokens` relation
-  - [ ] `JWT_REFRESH_SECRET` / `JWT_REFRESH_EXPIRES_IN` in `.env`, `.env.exemple`, CI and e2e env
-  - [ ] Migration applied and client generated (after approval)
+- [x] **Step 1: Schema, migration, env** (approval-gated: `prisma migrate dev`, `prisma generate`)
+  - [x] `RefreshToken` model and `User.refreshTokens` relation
+  - [x] `JWT_REFRESH_SECRET` / `JWT_REFRESH_EXPIRES_IN` in `.env`, `.env.exemple`, CI and docker-compose env
+  - [x] Migration applied and client generated (after approval)
 - [ ] **Step 2: `InvalidRefreshTokenError` and filter mapping**
   - [ ] Tests (filter spec asserts the 401 body)
   - [ ] Implementation
