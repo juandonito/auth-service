@@ -36,9 +36,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 2: `InvalidRefreshTokenError` and filter mapping**
   - [x] Tests (filter spec asserts the 401 body)
   - [x] Implementation
-- [ ] **Step 3: `TokenHasherService`**
-  - [ ] Tests (hash, match, mismatch, wrong-length stored hash, non-hex)
-  - [ ] Implementation + `.mock.ts`
+- [x] **Step 3: `TokenHasherService`**
+  - [x] Tests (hash, match, mismatch, wrong-length stored hash, non-hex)
+  - [x] Implementation + `.mock.ts`
 - [ ] **Step 4: `RefreshTokenIssuerService`**
   - [ ] Tests (`issue`, `expiresAt` = `exp`, `familyId`, `verify` rejections, fail-fast config)
   - [ ] Implementation, DTOs, `.mock.ts`, `jwt-service.mock.ts` update
@@ -120,6 +120,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
   - `expiresAt` in the past
   - user missing
   - lost race (`rotate` returns `false`)
+  - a hash mismatch on a validly signed token logs an error (with the token's `jti`, never the token) and still answers 401, since it means a corrupt row or a leaked signing secret
   - happy path: same `familyId`, signing happens before `rotate`, and the new access token carries the user's current role
 - **Implementation:** the use case and its `.mock.ts`.
 
