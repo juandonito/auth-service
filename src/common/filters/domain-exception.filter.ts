@@ -8,6 +8,7 @@ import {
 import type { Response } from 'express';
 import { STATUS_CODES } from 'node:http';
 import { InvalidCredentialsError } from '@auth/errors/invalid-credentials.error';
+import { InvalidRefreshTokenError } from '@auth/errors/invalid-refresh-token.error';
 import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { DomainError } from '../errors/domain.error';
 
@@ -18,6 +19,7 @@ const STATUS_BY_ERROR = new Map<
 >([
   [EmailAlreadyExistsError, HttpStatus.CONFLICT],
   [InvalidCredentialsError, HttpStatus.UNAUTHORIZED],
+  [InvalidRefreshTokenError, HttpStatus.UNAUTHORIZED],
 ]);
 
 @Catch(DomainError)

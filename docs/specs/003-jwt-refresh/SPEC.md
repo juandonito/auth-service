@@ -114,7 +114,7 @@ Validated via `RefreshDto` (`class-validator`): non-empty string. Global `Valida
 ```json
 {
   "statusCode": 401,
-  "message": "Invalid refresh token",
+  "message": "invalid refresh token",
   "error": "Unauthorized"
 }
 ```
@@ -161,12 +161,12 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 | ------------------------------------------------------ | ---------------------------- |
 | Missing/empty `refreshToken`                           | 400, validation detail       |
 | Extra field in body                                    | 400 (`forbidNonWhitelisted`) |
-| Bad signature, wrong algorithm, expired, malformed JWT | 401 "Invalid refresh token"  |
-| Valid signature but malformed payload                  | 401 "Invalid refresh token"  |
-| Unknown `jti` (includes deleted user) or hash mismatch | 401 "Invalid refresh token"  |
-| Token already used                                     | 401 "Invalid refresh token"  |
-| User not found at step 6 (race)                        | 401 "Invalid refresh token"  |
-| Access token sent to `/auth/refresh`                   | 401 "Invalid refresh token"  |
+| Bad signature, wrong algorithm, expired, malformed JWT | 401 "invalid refresh token"  |
+| Valid signature but malformed payload                  | 401 "invalid refresh token"  |
+| Unknown `jti` (includes deleted user) or hash mismatch | 401 "invalid refresh token"  |
+| Token already used                                     | 401 "invalid refresh token"  |
+| User not found at step 6 (race)                        | 401 "invalid refresh token"  |
+| Access token sent to `/auth/refresh`                   | 401 "invalid refresh token"  |
 
 ## Success criteria
 

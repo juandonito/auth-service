@@ -33,9 +33,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
   - [x] `RefreshToken` model and `User.refreshTokens` relation
   - [x] `JWT_REFRESH_SECRET` / `JWT_REFRESH_EXPIRES_IN` in `.env`, `.env.exemple`, CI and docker-compose env
   - [x] Migration applied and client generated (after approval)
-- [ ] **Step 2: `InvalidRefreshTokenError` and filter mapping**
-  - [ ] Tests (filter spec asserts the 401 body)
-  - [ ] Implementation
+- [x] **Step 2: `InvalidRefreshTokenError` and filter mapping**
+  - [x] Tests (filter spec asserts the 401 body)
+  - [x] Implementation
 - [ ] **Step 3: `TokenHasherService`**
   - [ ] Tests (hash, match, mismatch, wrong-length stored hash, non-hex)
   - [ ] Implementation + `.mock.ts`
@@ -73,7 +73,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 
 ### Step 2: `InvalidRefreshTokenError` and the filter mapping
 
-- **Tests:** extend `domain-exception.filter.spec.ts` to assert the body is `{statusCode: 401, error: 'Unauthorized', message: 'Invalid refresh token'}`.
+- **Tests:** extend `domain-exception.filter.spec.ts` to assert the body is `{statusCode: 401, error: 'Unauthorized', message: 'invalid refresh token'}`.
 - **Implementation:** the error class and the `STATUS_BY_ERROR` entry.
 
 ### Step 3: `TokenHasherService`

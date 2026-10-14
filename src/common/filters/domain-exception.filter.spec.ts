@@ -4,6 +4,7 @@ import {
 } from '@test/mock/arguments-host.mock';
 import { generateRandomString } from '@test/mock/common.mock';
 import { InvalidCredentialsError } from '@auth/errors/invalid-credentials.error';
+import { InvalidRefreshTokenError } from '@auth/errors/invalid-refresh-token.error';
 import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { DomainError } from '../errors/domain.error';
 import { DomainExceptionFilter } from './domain-exception.filter';
@@ -40,6 +41,22 @@ describe('DomainExceptionFilter', () => {
       statusCode: 401,
       error: 'Unauthorized',
       message: 'invalid credentials',
+    });
+  });
+
+  it('should respond 401 Unauthorized with "invalid refresh token" for InvalidRefreshTokenError', () => {
+    const response = generateMockHttpResponse();
+
+    filter.catch(
+      new InvalidRefreshTokenError(),
+      generateMockArgumentsHost(response),
+    );
+
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(response.json).toHaveBeenCalledWith({
+      statusCode: 401,
+      error: 'Unauthorized',
+      message: 'invalid refresh token',
     });
   });
 
