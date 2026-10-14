@@ -25,7 +25,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 
 **Keeping `exp` equal to `expiresAt`:** the service signs with `expiresIn`, then reads `exp` back from the signed token. One source of truth, no parsing of `'7d'`, no new dependency.
 
-**Fail-fast config:** `RefreshTokenIssuerService` reads `JWT_REFRESH_SECRET` with `getOrThrow` in its constructor and `JWT_REFRESH_EXPIRES_IN` with `get(..., '7d')`.
+**Fail-fast config:** `RefreshTokenIssuerService` reads `JWT_REFRESH_SECRET` and `JWT_REFRESH_EXPIRES_IN` with `getOrThrow` in its constructor (no silent default for a security setting).
 
 ## Progress
 
@@ -39,9 +39,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 3: `TokenHasherService`**
   - [x] Tests (hash, match, mismatch, wrong-length stored hash, non-hex)
   - [x] Implementation + `.mock.ts`
-- [ ] **Step 4: `RefreshTokenIssuerService`**
-  - [ ] Tests (`issue`, `expiresAt` = `exp`, `familyId`, `verify` rejections, fail-fast config)
-  - [ ] Implementation, DTOs, `.mock.ts`, `jwt-service.mock.ts` update
+- [x] **Step 4: `RefreshTokenIssuerService`**
+  - [x] Tests (`issue`, `expiresAt` = `exp`, `familyId`, `verify` rejections, fail-fast config)
+  - [x] Implementation, DTOs, `.mock.ts`, `jwt-service.mock.ts` update
 - [ ] **Step 5: Repositories**
   - [ ] Tests (`RefreshTokenRepository` create/findById/rotate, `UserRepository.findById`)
   - [ ] Implementation, `.mock.ts` files, `prisma.service.mock.ts`, `test/mock/refresh-token.mock.ts`
@@ -144,7 +144,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - a role change is picked up by the next refresh
 - identical 401 bodies
 - no `tokenHash` or `passwordHash` in any response
-- the app fails to start without `JWT_REFRESH_SECRET`
+- the app fails to start without `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN`
 
 The exact `docker compose` command is named for approval when reached.
 

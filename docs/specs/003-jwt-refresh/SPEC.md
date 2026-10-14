@@ -39,7 +39,7 @@ Single-use tokens cannot be stateless: a pure JWT stays valid until it expires, 
 | ------------------ | -------------------------------- | ---------------------------------------- |
 | Format             | signed JWT (HS256, `JWT_SECRET`) | signed JWT (HS256, `JWT_REFRESH_SECRET`) |
 | Payload            | `{ sub, role, iat, exp }`        | `{ sub, jti, iat, exp }`                 |
-| Expiry             | `JWT_EXPIRES_IN` (existing)      | `JWT_REFRESH_EXPIRES_IN` (default `7d`)  |
+| Expiry             | `JWT_EXPIRES_IN` (existing)      | `JWT_REFRESH_EXPIRES_IN` (required)      |
 | Stored server-side | no                               | yes (hash only), `jti` = row `id`        |
 
 - `jti` is the `id` of the `RefreshToken` row for this exact token
@@ -139,9 +139,9 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 | `JWT_SECRET`             | yes (existing)         | signs/verifies access tokens                |
 | `JWT_EXPIRES_IN`         | existing, unchanged    | access token TTL (not renamed in this spec) |
 | `JWT_REFRESH_SECRET`     | yes (new)              | signs/verifies refresh tokens               |
-| `JWT_REFRESH_EXPIRES_IN` | no (new), default `7d` | refresh token TTL                           |
+| `JWT_REFRESH_EXPIRES_IN` | yes (new)              | refresh token TTL                           |
 
-- Required values are read with `getOrThrow`, so the app refuses to boot if `JWT_REFRESH_SECRET` is missing. The optional TTL is read with `get(..., '7d')`.
+- Both new values are read with `getOrThrow`, so the app refuses to boot if `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN` is missing. The lifetime is a security setting: there is no silent default.
 - `.env` and the example env file are updated with the new variables.
 
 ## Security requirements
@@ -194,7 +194,7 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 - [ ] All 401 responses have the exact same body
 - [ ] The new access token contains `sub` and the user's current `role`
 - [ ] If the user's role is changed in the DB after login, the access token issued by the next refresh carries the new role
-- [ ] The app fails to start if `JWT_REFRESH_SECRET` is missing
+- [ ] The app fails to start if `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN` is missing
 - [ ] Response bodies never contain `tokenHash`, `passwordHash` or any user field
 
 ## Known limitations
@@ -204,7 +204,7 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 
 ## Decisions
 
-- **Sliding session lifetime.** Every rotation grants a fresh `JWT_REFRESH_EXPIRES_IN` (7 days), so an active user never has to log in again. The flip side: a stolen chain that keeps rotating never expires either. An absolute per-family cap (for example a `familyExpiresAt` column copied from the first token and checked at every refresh) is deliberately not part of this spec. It is revisited in the revocation spec, since it touches the same table and the same risk.
+- **Sliding session lifetime.** Every rotation grants a fresh `JWT_REFRESH_EXPIRES_IN` (7 days in the example env files), so an active user never has to log in again. The flip side: a stolen chain that keeps rotating never expires either. An absolute per-family cap (for example a `familyExpiresAt` column copied from the first token and checked at every refresh) is deliberately not part of this spec. It is revisited in the revocation spec, since it touches the same table and the same risk.
 - **Transport:** JSON body only (see "Transport").
 - **Role:** stays in the access token and is re-read from the DB at every refresh.
 
