@@ -1,4 +1,6 @@
+import type { CreateRefreshTokenDto } from '@auth/dto/create-refresh-token.dto';
 import type { IssuedRefreshToken } from '@auth/dto/issued-refresh-token.dto';
+import type { RefreshToken } from '@generated/prisma/client';
 import {
   generateRandomDate,
   generateRandomId,
@@ -23,6 +25,35 @@ export function generateMockRefreshTokenPayload(
     exp: iat + generateRandomInt(60, 7 * 24 * 60 * 60),
     ...overrides,
   };
+}
+
+/** A `RefreshToken` row, unused and not yet expired by default. */
+export function generateMockRefreshToken(
+  overrides: Partial<RefreshToken> = {},
+): RefreshToken {
+  return {
+    id: generateRandomId(),
+    familyId: generateRandomId(),
+    userId: generateRandomId(),
+    tokenHash: generateRandomString(64, '0123456789abcdef'),
+    expiresAt: generateRandomDate(
+      new Date(Date.now() + 60_000),
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    ),
+    revokedAt: null,
+    replacedBy: null,
+    createdAt: generateRandomDate(),
+    ...overrides,
+  };
+}
+
+/** The data persisted when a refresh token is created. */
+export function generateMockCreateRefreshTokenDto(
+  overrides: Partial<CreateRefreshTokenDto> = {},
+): CreateRefreshTokenDto {
+  const { id, familyId, userId, tokenHash, expiresAt } =
+    generateMockRefreshToken();
+  return { id, familyId, userId, tokenHash, expiresAt, ...overrides };
 }
 
 /** A freshly issued refresh token, with the hash and expiry of its row. */

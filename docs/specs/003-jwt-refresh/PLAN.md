@@ -16,7 +16,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 | `InvalidRefreshTokenError` | `auth/errors/` | the single 401 error, mapped in `STATUS_BY_ERROR` |
 | `TokenHasherService` | `auth/services/` | `hash(token)` is SHA-256 hex. `matches(token, storedHash)` compares 32-byte digest buffers with `timingSafeEqual`; a wrong-length stored hash returns `false` |
 | `RefreshTokenIssuerService` | `auth/services/` | `issue(userId, familyId?)` generates `id` with `randomUUID()`, signs `{sub}` with `jwtid: id`, `JWT_REFRESH_SECRET`, HS256 and the TTL, decodes `exp` to get `expiresAt`, hashes, and returns `{id, familyId, token, tokenHash, expiresAt}` without touching the DB. `verify(token)` pins HS256, validates that `sub` and `jti` are strings, and converts every failure to `InvalidRefreshTokenError` |
-| `RefreshTokenRepository` | `auth/repositories/` | `create`, `findById`, `rotate(oldId, newRow): Promise<boolean>` |
+| `RefreshTokenRepository` | `auth/repositories/` | `create`, `findByIdWithTokenHash`, `rotate(oldId, newRow): Promise<boolean>` |
 | `UserRepository.findById` | `users/repositories/` | returns a `PublicUser`, never `passwordHash` |
 | `RotateRefreshTokenUseCase` | `auth/usecases/` | the processing order from the spec |
 | `LoginUserUseCase` | `auth/usecases/` | now also issues and persists a refresh token |
@@ -42,9 +42,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 4: `RefreshTokenIssuerService`**
   - [x] Tests (`issue`, `expiresAt` = `exp`, `familyId`, `verify` rejections, fail-fast config)
   - [x] Implementation, DTOs, `.mock.ts`, `jwt-service.mock.ts` update
-- [ ] **Step 5: Repositories**
-  - [ ] Tests (`RefreshTokenRepository` create/findById/rotate, `UserRepository.findById`)
-  - [ ] Implementation, `.mock.ts` files, `prisma.service.mock.ts`, `test/mock/refresh-token.mock.ts`
+- [x] **Step 5: Repositories**
+  - [x] Tests (`RefreshTokenRepository` create/findByIdWithTokenHash/rotate, `UserRepository.findById`)
+  - [x] Implementation, `.mock.ts` files, `prisma.service.mock.ts`, `test/mock/refresh-token.mock.ts`
 - [ ] **Step 6: Login issues and persists a refresh token**
   - [ ] Tests (usecase, controller spec, login e2e)
   - [ ] Implementation (`LoginUserUseCase`, `AuthTokensDto`, wiring)
@@ -95,7 +95,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 ### Step 5: Repositories
 
 - **Tests (mocked Prisma):**
-  - `RefreshTokenRepository.create` and `findById`
+  - `RefreshTokenRepository.create` and `findByIdWithTokenHash`
   - `rotate`: the conditional `updateMany` (`id` and `revokedAt: null`) sets `revokedAt` and `replacedBy`, and the insert runs in the same `$transaction`; when the count is 0 it returns `false` and does not insert
   - `UserRepository.findById` returns a `PublicUser` or `null`
 - **Implementation:** both repositories and their `.mock.ts` files. Extend `prisma.service.mock.ts` (`refreshToken` delegate, `$transaction`). Add `test/mock/refresh-token.mock.ts` with `generateMockRefreshToken(overrides?)`.
@@ -162,7 +162,7 @@ Everything an attacker can influence ends in the same 401.
 | --- | --- | --- |
 | `verifyAsync` | bad signature, wrong algorithm, expired or malformed | caught in `verify`, rethrown as `InvalidRefreshTokenError` |
 | payload shape | `sub` or `jti` missing or not a string | explicit check, then `InvalidRefreshTokenError` |
-| `findById` (token) | `null` (unknown, or user deleted by cascade) | `InvalidRefreshTokenError` |
+| `findByIdWithTokenHash` | `null` (unknown, or user deleted by cascade) | `InvalidRefreshTokenError` |
 | `matches` | a wrong-length stored hash would make `timingSafeEqual` throw | returns `false`, so it is a mismatch and a 401 |
 | `revokedAt` set or `expiresAt` past | | `InvalidRefreshTokenError` |
 | `UserRepository.findById` | `null` in a race | `InvalidRefreshTokenError` |

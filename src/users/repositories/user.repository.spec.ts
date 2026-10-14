@@ -74,6 +74,45 @@ describe('UserRepository', () => {
     });
   });
 
+  describe('findById', () => {
+    it('should look the user up by its id', async () => {
+      const { id } = generateMockUser();
+
+      await repository.findById(id);
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id } }),
+      );
+    });
+
+    it('should select only public fields so the hash is never exposed', async () => {
+      await repository.findById(generateMockUser().id);
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: { id: true, email: true, role: true },
+        }),
+      );
+    });
+
+    it('should return the user found', async () => {
+      const publicUser = generateMockPublicUser();
+      prisma.user.findUnique.mockResolvedValue(publicUser);
+
+      await expect(repository.findById(publicUser.id)).resolves.toEqual(
+        publicUser,
+      );
+    });
+
+    it('should return null when no user has that id', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        repository.findById(generateMockUser().id),
+      ).resolves.toBeNull();
+    });
+  });
+
   describe('findByEmailWithPasswordHash', () => {
     it('should look the user up by its exact email', async () => {
       const { email } = generateMockUser();

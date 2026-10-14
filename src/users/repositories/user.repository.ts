@@ -33,6 +33,13 @@ export class UserRepository {
     }
   }
 
+  findById(id: string): Promise<PublicUser | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: PUBLIC_USER_SELECT,
+    });
+  }
+
   findByEmailWithPasswordHash(
     email: string,
   ): Promise<UserWithPasswordHash | null> {

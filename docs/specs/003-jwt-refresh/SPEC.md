@@ -200,6 +200,7 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 ## Known limitations
 
 - **Rotation without reuse detection.** A thief who rotates a stolen token first keeps a working chain, and the legitimate user's next attempt just gets a 401 with nothing revoked. This spec must not ship to production alone: the revocation spec (logout + reuse detection) should follow right after.
+- **`revokedAt` uses the application clock.** It is set with `new Date()` in the repository, like `expiresAt` (the JWT `exp`), while `createdAt` uses the database clock. Nothing in this spec compares it to a time (validity only checks `revokedAt IS NULL`, and the race is settled by the conditional update), so skew between instances is harmless here. A reuse grace window in the revocation spec would compare a clock to `revokedAt`: it must either tolerate that skew or move the write to the database clock (`now()`, via raw SQL).
 - **Table growth.** Every login and every refresh adds a row, and the access token lasts only 15 minutes, so the table grows fast. Expired-row cleanup is out of scope here but is a near-term follow-up.
 
 ## Decisions

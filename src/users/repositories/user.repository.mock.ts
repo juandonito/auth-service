@@ -6,6 +6,7 @@ export type MockUserRepository = ReturnType<typeof generateMockUserRepository>;
 export function generateMockUserRepository() {
   return {
     create: jest.fn().mockResolvedValue(generateMockPublicUser()),
+    findById: jest.fn().mockResolvedValue(generateMockPublicUser()),
     findByEmailWithPasswordHash: jest
       .fn()
       .mockResolvedValue(generateMockUser()),
