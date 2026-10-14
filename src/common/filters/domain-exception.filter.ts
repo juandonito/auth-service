@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { STATUS_CODES } from 'node:http';
+import { InvalidCredentialsError } from '@auth/errors/invalid-credentials.error';
 import { EmailAlreadyExistsError } from '@users/errors/email-already-exists.error';
 import { DomainError } from '../errors/domain.error';
 
@@ -14,7 +15,10 @@ import { DomainError } from '../errors/domain.error';
 const STATUS_BY_ERROR = new Map<
   abstract new (...args: never[]) => DomainError,
   HttpStatus
->([[EmailAlreadyExistsError, HttpStatus.CONFLICT]]);
+>([
+  [EmailAlreadyExistsError, HttpStatus.CONFLICT],
+  [InvalidCredentialsError, HttpStatus.UNAUTHORIZED],
+]);
 
 @Catch(DomainError)
 export class DomainExceptionFilter implements ExceptionFilter {

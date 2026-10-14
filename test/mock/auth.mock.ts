@@ -1,3 +1,4 @@
+import type { LoginDto } from '@auth/dto/login.dto';
 import type { RegisterDto } from '@auth/dto/register.dto';
 import {
   generateRandomEmail,
@@ -14,6 +15,16 @@ export function generateMockPassword(
     generateRandomString(1, 'abcdefghijklmnopqrstuvwxyz') +
     generateRandomString(1, '0123456789');
   return required + generateRandomString(length - required.length);
+}
+
+export function generateMockLoginDto(
+  overrides: Partial<LoginDto> = {},
+): LoginDto {
+  return {
+    email: generateRandomEmail(),
+    password: generateMockPassword(),
+    ...overrides,
+  };
 }
 
 export function generateMockRegisterDto(

@@ -73,4 +73,45 @@ describe('UserRepository', () => {
       );
     });
   });
+
+  describe('findByEmailWithPasswordHash', () => {
+    it('should look the user up by its exact email', async () => {
+      const { email } = generateMockUser();
+
+      await repository.findByEmailWithPasswordHash(email);
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { email } }),
+      );
+    });
+
+    it('should select the id, email, role and password hash only', async () => {
+      const { email } = generateMockUser();
+
+      await repository.findByEmailWithPasswordHash(email);
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: { id: true, email: true, role: true, passwordHash: true },
+        }),
+      );
+    });
+
+    it('should return the user found', async () => {
+      const user = generateMockUser();
+      prisma.user.findUnique.mockResolvedValue(user);
+
+      await expect(
+        repository.findByEmailWithPasswordHash(user.email),
+      ).resolves.toEqual(user);
+    });
+
+    it('should return null when no user has that email', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        repository.findByEmailWithPasswordHash(generateMockUser().email),
+      ).resolves.toBeNull();
+    });
+  });
 });

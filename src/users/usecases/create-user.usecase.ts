@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import type { PublicUser } from '../dto/public-user.dto';
 import { UserRepository } from '../repositories/user.repository';
-import { PasswordHasher } from '../services/password-hasher.service';
+import { PasswordHasherService } from '../services/password-hasher.service';
 
 @Injectable()
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly passwordHasher: PasswordHasher,
+    private readonly passwordHasher: PasswordHasherService,
   ) {}
 
   async execute({

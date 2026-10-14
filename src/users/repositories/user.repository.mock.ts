@@ -1,4 +1,4 @@
-import { generateMockPublicUser } from '@test/mock/user.mock';
+import { generateMockPublicUser, generateMockUser } from '@test/mock/user.mock';
 
 export type MockUserRepository = ReturnType<typeof generateMockUserRepository>;
 
@@ -6,5 +6,8 @@ export type MockUserRepository = ReturnType<typeof generateMockUserRepository>;
 export function generateMockUserRepository() {
   return {
     create: jest.fn().mockResolvedValue(generateMockPublicUser()),
+    findByEmailWithPasswordHash: jest
+      .fn()
+      .mockResolvedValue(generateMockUser()),
   };
 }
