@@ -62,9 +62,12 @@ describe('POST /auth/refresh (e2e)', () => {
     };
   };
 
-  /** A token signed with the real secret whose row exists, so only the tampered part can fail it. */
-  const seedRowFor = async (userId: string, tokenHash: string) => {
-    const id = randomUUID();
+  /** An unused, unexpired row, so only what a test tampers with can fail the token. */
+  const seedRowFor = async (
+    userId: string,
+    tokenHash: string,
+    id: string = randomUUID(),
+  ) => {
     await prisma.refreshToken.create({
       data: {
         id,
@@ -75,6 +78,21 @@ describe('POST /auth/refresh (e2e)', () => {
       },
     });
     return id;
+  };
+
+  /**
+   * Signs a token and stores the row holding the hash of that very token. The
+   * token passes the hash check, so a regression in the verification step a
+   * test targets is the only thing that can let it through.
+   */
+  const seedSignedToken = async (
+    userId: string,
+    sign: (jti: string) => Promise<string>,
+  ) => {
+    const jti = randomUUID();
+    const token = await sign(jti);
+    await seedRowFor(userId, sha256(token), jti);
+    return token;
   };
 
   beforeAll(async () => {
@@ -109,6 +127,8 @@ describe('POST /auth/refresh (e2e)', () => {
       const { body } = await refresh({ refreshToken }).expect(200);
 
       expect(Object.keys(body).sort()).toEqual(['accessToken', 'refreshToken']);
+      expect(typeof body.accessToken).toBe('string');
+      expect(typeof body.refreshToken).toBe('string');
       expect(body.refreshToken).not.toBe(refreshToken);
     });
 
@@ -208,14 +228,6 @@ describe('POST /auth/refresh (e2e)', () => {
         accessTokenVerifier.verifyAsync(body.accessToken),
       ).resolves.toMatchObject({ role: Role.ADMIN });
     });
-
-    it('should never include a hash or a user field in the response', async () => {
-      const { refreshToken } = await startSession();
-
-      const { text } = await refresh({ refreshToken }).expect(200);
-
-      expect(text).not.toMatch(/tokenHash|passwordHash|email|role/i);
-    });
   });
 
   describe('with a token that cannot be exchanged', () => {
@@ -246,61 +258,75 @@ describe('POST /auth/refresh (e2e)', () => {
 
     it('should respond 401 for an expired token', async () => {
       const { user } = await seedUser();
-      const id = await seedRowFor(
-        user.id,
-        generateRandomString(64, '0123456789abcdef'),
-      );
       const exp = Math.floor(Date.now() / 1000) - 10;
-      const refreshToken = await refreshSigner.signAsync({
-        sub: user.id,
-        jti: id,
-        exp,
-      });
+      const refreshToken = await seedSignedToken(user.id, (jti) =>
+        refreshSigner.signAsync({ sub: user.id, jti, exp }),
+      );
 
       await refresh({ refreshToken }).expect(401);
     });
 
     it('should respond 401 for a tampered token', async () => {
-      const { refreshToken } = await startSession();
-      const [header, payload, signature] = refreshToken.split('.');
+      const { user } = await seedUser();
+      const jti = randomUUID();
+      const [header, payload, signature] = (
+        await refreshSigner.signAsync(
+          { sub: user.id, jti },
+          { expiresIn: '1m' },
+        )
+      ).split('.');
       const flipped = signature.startsWith('A') ? 'B' : 'A';
+      const refreshToken = [header, payload, flipped + signature.slice(1)].join(
+        '.',
+      );
+      await seedRowFor(user.id, sha256(refreshToken), jti);
 
-      await refresh({
-        refreshToken: [header, payload, flipped + signature.slice(1)].join('.'),
-      }).expect(401);
+      await refresh({ refreshToken }).expect(401);
     });
 
     it('should respond 401 for a token signed with another secret', async () => {
       const { user } = await seedUser();
-      const jti = await seedRowFor(
-        user.id,
-        generateRandomString(64, '0123456789abcdef'),
+      const refreshToken = await seedSignedToken(user.id, (jti) =>
+        new JwtService({ secret: generateRandomString(32) }).signAsync(
+          { sub: user.id, jti },
+          { expiresIn: '1m' },
+        ),
       );
-      const refreshToken = await new JwtService({
-        secret: generateRandomString(32),
-      }).signAsync({ sub: user.id, jti }, { expiresIn: '1m' });
 
       await refresh({ refreshToken }).expect(401);
     });
 
     it('should respond 401 for a token signed with another algorithm', async () => {
       const { user } = await seedUser();
-      const jti = await seedRowFor(
-        user.id,
-        generateRandomString(64, '0123456789abcdef'),
-      );
-      const refreshToken = await refreshSigner.signAsync(
-        { sub: user.id, jti },
-        { algorithm: 'HS512', expiresIn: '1m' },
+      const refreshToken = await seedSignedToken(user.id, (jti) =>
+        refreshSigner.signAsync(
+          { sub: user.id, jti },
+          { algorithm: 'HS512', expiresIn: '1m' },
+        ),
       );
 
       await refresh({ refreshToken }).expect(401);
     });
 
     it.each([
-      ['a missing sub', () => ({ jti: randomUUID() })],
+      ['a missing sub', () => ({})],
+      ['a non-string sub', () => ({ sub: 123 })],
+    ])(
+      'should respond 401 for a validly signed token with %s',
+      async (_, claims) => {
+        const { user } = await seedUser();
+        const refreshToken = await seedSignedToken(user.id, (jti) =>
+          refreshSigner.signAsync({ ...claims(), jti }, { expiresIn: '1m' }),
+        );
+
+        await refresh({ refreshToken }).expect(401);
+      },
+    );
+
+    // No row can hold a missing or non-string jti, so this validation is the
+    // only thing standing between such a token and a database lookup.
+    it.each([
       ['a missing jti', () => ({ sub: randomUUID() })],
-      ['a non-string sub', () => ({ sub: 123, jti: randomUUID() })],
       ['a non-string jti', () => ({ sub: randomUUID(), jti: 123 })],
     ])(
       'should respond 401 for a validly signed token with %s',
