@@ -9,6 +9,7 @@ import { TokenHasherService } from './services/token-hasher.service';
 import { TokenIssuerService } from './services/token-issuer.service';
 import { LoginUserUseCase } from './usecases/login-user.usecase';
 import { RegisterUserUseCase } from './usecases/register-user.usecase';
+import { RotateRefreshTokenUseCase } from './usecases/rotate-refresh-token.usecase';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RegisterUserUseCase } from './usecases/register-user.usecase';
   providers: [
     RegisterUserUseCase,
     LoginUserUseCase,
+    RotateRefreshTokenUseCase,
     TokenIssuerService,
     TokenHasherService,
     RefreshTokenIssuerService,

@@ -51,9 +51,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 7: `RotateRefreshTokenUseCase`**
   - [x] Tests (one per spec branch, plus happy path)
   - [x] Implementation + `.mock.ts`
-- [ ] **Step 8: `POST /auth/refresh` and wiring**
-  - [ ] Tests (controller, `RefreshDto` validation)
-  - [ ] Implementation (`RefreshDto`, route, `AuthModule` providers)
+- [x] **Step 8: `POST /auth/refresh` and wiring**
+  - [x] Tests (controller, `RefreshDto` validation)
+  - [x] Implementation (`RefreshDto`, route, `AuthModule` providers)
 - [ ] **Step 9: E2E** (approval-gated: `docker compose`)
   - [ ] `test/auth-refresh.e2e-spec.ts` covering every success criterion, including the concurrent-refresh race
   - [ ] Suite green against real Postgres (after approval)

@@ -2,15 +2,18 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import type { AccessTokenDto } from './dto/access-token.dto';
 import type { AuthTokensDto } from './dto/auth-tokens.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginUserUseCase } from './usecases/login-user.usecase';
 import { RegisterUserUseCase } from './usecases/register-user.usecase';
+import { RotateRefreshTokenUseCase } from './usecases/rotate-refresh-token.usecase';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly loginUserUseCase: LoginUserUseCase,
+    private readonly rotateRefreshTokenUseCase: RotateRefreshTokenUseCase,
   ) {}
 
   @Post('register')
@@ -22,5 +25,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto): Promise<AuthTokensDto> {
     return this.loginUserUseCase.execute(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refresh(@Body() { refreshToken }: RefreshDto): Promise<AuthTokensDto> {
+    return this.rotateRefreshTokenUseCase.execute(refreshToken);
   }
 }
