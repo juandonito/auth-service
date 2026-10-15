@@ -48,9 +48,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 6: Login issues and persists a refresh token**
   - [x] Tests (usecase, controller spec, login e2e)
   - [x] Implementation (`LoginUserUseCase`, `AuthTokensDto`, wiring)
-- [ ] **Step 7: `RotateRefreshTokenUseCase`**
-  - [ ] Tests (one per spec branch, plus happy path)
-  - [ ] Implementation + `.mock.ts`
+- [x] **Step 7: `RotateRefreshTokenUseCase`**
+  - [x] Tests (one per spec branch, plus happy path)
+  - [x] Implementation + `.mock.ts`
 - [ ] **Step 8: `POST /auth/refresh` and wiring**
   - [ ] Tests (controller, `RefreshDto` validation)
   - [ ] Implementation (`RefreshDto`, route, `AuthModule` providers)
