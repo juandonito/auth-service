@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import type { AccessTokenDto } from './dto/access-token.dto';
+import type { AuthTokensDto } from './dto/auth-tokens.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginUserUseCase } from './usecases/login-user.usecase';
@@ -19,7 +20,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto): Promise<AccessTokenDto> {
+  login(@Body() dto: LoginDto): Promise<AuthTokensDto> {
     return this.loginUserUseCase.execute(dto);
   }
 }

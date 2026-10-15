@@ -6,6 +6,7 @@ import {
   generateMockRegisterDto,
 } from '@test/mock/auth.mock';
 import { generateMockAccessToken } from '@test/mock/jwt-service.mock';
+import { generateMockRefreshTokenJwt } from '@test/mock/refresh-token.mock';
 import {
   generateMockLoginUserUseCase,
   type MockLoginUserUseCase,
@@ -77,8 +78,11 @@ describe('AuthController', () => {
       expect(loginUserUseCase.execute).toHaveBeenCalledWith(dto);
     });
 
-    it('should return the access token from the login use case', async () => {
-      const result = { accessToken: generateMockAccessToken() };
+    it('should return the access and refresh tokens from the login use case', async () => {
+      const result = {
+        accessToken: generateMockAccessToken(),
+        refreshToken: generateMockRefreshTokenJwt(),
+      };
       loginUserUseCase.execute.mockResolvedValue(result);
 
       await expect(controller.login(generateMockLoginDto())).resolves.toEqual(

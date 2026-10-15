@@ -45,9 +45,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 5: Repositories**
   - [x] Tests (`RefreshTokenRepository` create/findByIdWithTokenHash/rotate, `UserRepository.findById`)
   - [x] Implementation, `.mock.ts` files, `prisma.service.mock.ts`, `test/mock/refresh-token.mock.ts`
-- [ ] **Step 6: Login issues and persists a refresh token**
-  - [ ] Tests (usecase, controller spec, login e2e)
-  - [ ] Implementation (`LoginUserUseCase`, `AuthTokensDto`, wiring)
+- [x] **Step 6: Login issues and persists a refresh token**
+  - [x] Tests (usecase, controller spec, login e2e)
+  - [x] Implementation (`LoginUserUseCase`, `AuthTokensDto`, wiring)
 - [ ] **Step 7: `RotateRefreshTokenUseCase`**
   - [ ] Tests (one per spec branch, plus happy path)
   - [ ] Implementation + `.mock.ts`
