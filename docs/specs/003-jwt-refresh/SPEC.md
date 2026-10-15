@@ -134,12 +134,12 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 
 ### Environment variables
 
-| Variable                 | Required               | Purpose                                     |
-| ------------------------ | ---------------------- | ------------------------------------------- |
-| `JWT_SECRET`             | yes (existing)         | signs/verifies access tokens                |
-| `JWT_EXPIRES_IN`         | existing, unchanged    | access token TTL (not renamed in this spec) |
-| `JWT_REFRESH_SECRET`     | yes (new)              | signs/verifies refresh tokens               |
-| `JWT_REFRESH_EXPIRES_IN` | yes (new)              | refresh token TTL                           |
+| Variable                 | Required            | Purpose                                     |
+| ------------------------ | ------------------- | ------------------------------------------- |
+| `JWT_SECRET`             | yes (existing)      | signs/verifies access tokens                |
+| `JWT_EXPIRES_IN`         | existing, unchanged | access token TTL (not renamed in this spec) |
+| `JWT_REFRESH_SECRET`     | yes (new)           | signs/verifies refresh tokens               |
+| `JWT_REFRESH_EXPIRES_IN` | yes (new)           | refresh token TTL                           |
 
 - Both new values are read with `getOrThrow`, so the app refuses to boot if `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN` is missing. The lifetime is a security setting: there is no silent default.
 - `.env` and the example env file are updated with the new variables.
@@ -170,32 +170,32 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 
 ## Success criteria
 
-- [ ] Login returns `{ accessToken, refreshToken }` and creates a `RefreshToken` row; the stored value is a hash, not the token
-- [ ] The row's `expiresAt` equals the refresh token's JWT `exp`
-- [ ] `/auth/refresh` with a valid token returns 200 and a new, different pair
-- [ ] The token used is marked used (`revokedAt` and `replacedBy` both set) and the new row has the same `familyId`
-- [ ] Chained refresh: the refresh token returned by a refresh can itself be refreshed, and the `familyId` is unchanged
-- [ ] Two separate logins produce different `familyId`s; a refresh keeps the one of its login
-- [ ] Presenting the same refresh token a second time returns 401
-- [ ] Two concurrent refreshes with the same token: exactly one succeeds
-- [ ] An expired refresh token returns 401
-- [ ] A tampered refresh token returns 401
-- [ ] A token signed with the wrong secret returns 401
-- [ ] A token signed with a different algorithm returns 401
-- [ ] A validly signed token with a malformed payload (`sub` or `jti` missing or not a string) returns 401
-- [ ] A token with a valid signature and an existing `jti` but a hash mismatch returns 401
-- [ ] An access token sent to `/auth/refresh` returns 401
-- [ ] Deleted user: their tokens are gone with them and refresh returns 401
-- [ ] The "user not found" branch (step 6) returns 401 (unit test, mocked repository)
-- [ ] A row whose `expiresAt` is in the past but whose JWT is still valid returns 401 (step 5, unit test, mocked repository)
-- [ ] A stored `tokenHash` of the wrong length returns 401, not 500 (unit test)
-- [ ] A lost race (conditional update touches 0 rows) writes no new row
-- [ ] The refresh token's lifetime is sliding: each refresh issues a token valid for a fresh `JWT_REFRESH_EXPIRES_IN` (see Decisions)
-- [ ] All 401 responses have the exact same body
-- [ ] The new access token contains `sub` and the user's current `role`
-- [ ] If the user's role is changed in the DB after login, the access token issued by the next refresh carries the new role
-- [ ] The app fails to start if `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN` is missing
-- [ ] Response bodies never contain `tokenHash`, `passwordHash` or any user field
+- [x] Login returns `{ accessToken, refreshToken }` and creates a `RefreshToken` row; the stored value is a hash, not the token
+- [x] The row's `expiresAt` equals the refresh token's JWT `exp`
+- [x] `/auth/refresh` with a valid token returns 200 and a new, different pair
+- [x] The token used is marked used (`revokedAt` and `replacedBy` both set) and the new row has the same `familyId`
+- [x] Chained refresh: the refresh token returned by a refresh can itself be refreshed, and the `familyId` is unchanged
+- [x] Two separate logins produce different `familyId`s; a refresh keeps the one of its login
+- [x] Presenting the same refresh token a second time returns 401
+- [x] Two concurrent refreshes with the same token: exactly one succeeds
+- [x] An expired refresh token returns 401
+- [x] A tampered refresh token returns 401
+- [x] A token signed with the wrong secret returns 401
+- [x] A token signed with a different algorithm returns 401
+- [x] A validly signed token with a malformed payload (`sub` or `jti` missing or not a string) returns 401
+- [x] A token with a valid signature and an existing `jti` but a hash mismatch returns 401
+- [x] An access token sent to `/auth/refresh` returns 401
+- [x] Deleted user: their tokens are gone with them and refresh returns 401
+- [x] The "user not found" branch (step 6) returns 401 (unit test, mocked repository)
+- [x] A row whose `expiresAt` is in the past but whose JWT is still valid returns 401 (step 5, unit test, mocked repository)
+- [x] A stored `tokenHash` of the wrong length returns 401, not 500 (unit test)
+- [x] A lost race (conditional update touches 0 rows) writes no new row
+- [x] The refresh token's lifetime is sliding: each refresh issues a token valid for a fresh `JWT_REFRESH_EXPIRES_IN` (see Decisions)
+- [x] All 401 responses have the exact same body
+- [x] The new access token contains `sub` and the user's current `role`
+- [x] If the user's role is changed in the DB after login, the access token issued by the next refresh carries the new role
+- [x] The app fails to start if `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN` is missing
+- [x] Response bodies never contain `tokenHash`, `passwordHash` or any user field
 
 ## Known limitations
 
@@ -211,4 +211,53 @@ This is produced by a single `InvalidRefreshTokenError` (`auth/errors/`), mapped
 
 ## Recap
 
-<!-- Filled in after implementation: what shipped (PR, branch), and lessons for future specs, grouped by Architecture / Naming / Test conventions / Process. -->
+**Shipped:** branch `feature/003-jwt-refresh` (12 commits, pushed). PR: not opened yet (`gh` was not authenticated). Login returns `{ accessToken, refreshToken }` and persists a hashed `RefreshToken` row; `POST /auth/refresh` rotates single-use tokens within a family; every failure answers the same 401. 165 unit tests and 65 e2e tests pass, coverage 100% statements/functions/lines and 81.81% branches. The follow-up that must come next is the revocation spec (logout and reuse detection), see "Known limitations".
+
+### Architecture
+
+- **Name the sensitive lookup.** The repository method that returns the stored hash is `findByIdWithTokenHash`, not `findById`, the same rule as `findByEmailWithPasswordHash`. `create` returns `void` so the hash never travels back out.
+- **Sign before touching the database.** The row id is the `jti`, so it is generated first, the token is signed, then hashed, then persisted. A lost race wastes a signature but writes nothing.
+- **Settle races in SQL, not in code.** One transaction does a conditional update (`WHERE revokedAt IS NULL`) and then the insert. `rotate` returns a boolean and the use case throws the domain error, so the repository stays free of business errors.
+- **The row is authoritative.** The use case loads the user by `row.userId`, not by the JWT's `sub`. The hash match already ties the token to its row.
+- **A malformed stored hash is a mismatch, not an error.** `timingSafeEqual` throws on unequal lengths, which would answer 500 for exactly one kind of input.
+- **Classify verification failures.** A bad token (`JsonWebTokenError` and subclasses) is routine and not logged. Anything else is a server fault: log the stack, still answer the same 401. A validly signed token that doesn't match its hash logs one error with the `jti`, never the token or the hash.
+- **Keep the secrets apart.** `JwtModule` stays registered with `JWT_SECRET` only. Refresh signing passes its own `secret`, `algorithm` and `expiresIn` per call, so the two can't be mixed.
+- **Not every action needs a use case.** There is no "create refresh token" use case: login's private `startSession` issues and persists the first token.
+
+### Naming
+
+- `RotateRefreshTokenUseCase`, `RefreshTokenIssuerService`, `TokenHasherService`, `InvalidRefreshTokenError`.
+- The 401 message is lowercase (`invalid refresh token`) to match `invalid credentials`.
+
+### Test conventions
+
+- **One test per branch, not one per call.** The first draft of the rotate spec had 21 tests, most of them asserting a single call argument. Merged down to 13 with the same branch coverage. Test behavior and the arguments that matter (`rotate`, role, family), not every internal call.
+- **Don't write an e2e test that stubs what it tests.** A "fails to start" check that replaces `ConfigService` with a throwing stub only repeats the unit test. The criterion is covered by the issuer service's unit tests instead.
+- **A DTO spec can't test the global pipe.** "Extra field rejected" belongs to `forbidNonWhitelisted`, so it is covered in e2e, where the real pipe runs.
+- **The Prisma double needs a separate `tx` client** so a test can tell a write inside the transaction from one outside it.
+- **Whole-second `iat` means two access tokens issued in the same second are identical.** Assert that the refresh token differs, not the access token.
+- Random mock data and colocated `.mock.ts` doubles held up fine for every new class.
+
+### Process
+
+- **Review after tests and after implementation.** Mid-feature the workflow rule was tightened (`c65c262`) from "stop after each step" to stopping at red and again at green. It caught the over-testing above before it was committed.
+- **List what each call can throw or return** in every auth review. It is what exposed the corrupt-hash and lost-race cases early.
+- **Approval-gated commands** (`prisma migrate`, `prisma generate`) were named and approved separately, as the rules require. No `docker compose` command was needed because the database was already running.
+- **Check the tooling before the last step.** The push worked but `gh` was not authenticated, so the PR needed a manual step. Run `gh auth status` before the end of the next feature.
+
+### Improvements to consider
+
+- **Security and product**
+  - Write the revocation spec next (logout and reuse detection), with an absolute cap on a family's lifetime, since sliding expiry lets a stolen chain rotate forever.
+  - Rate-limit `/auth/login` and `/auth/refresh`: both are open to brute force and out of scope in every spec so far.
+  - Add the expired-row cleanup job: the table grows on every login and refresh.
+  - Refresh token format: the JWT is a reasonable choice, not a mistake, but it adds little here. We look the row up in the database on every refresh, so the stateless benefit is unused, while it costs a second secret, algorithm pinning and payload validation. An opaque `id.secret` token would be slightly simpler. Revisit in the revocation spec, which touches the same table. The access token stays a JWT.
+- **Testing**
+  - Run e2e tests against a dedicated test database instead of the local dev one (approval-gated setup, own step).
+  - Add one `generateMockTokenHash()` helper: the same 64-hex expression is repeated in the e2e spec and in the mock helpers.
+  - Exclude constructor decorator-metadata branches from coverage, so the branch number (81.81%) reflects real gaps.
+  - Add to `testing.md`: test behavior and the arguments that matter, not every internal call.
+- **Workflow**
+  - Gate review by risk: both stops for security-critical steps (issuer, `rotate`, the rotate use case), one stop for plumbing steps.
+  - Add a preflight to each plan: `gh auth status`, database running, env vars present.
+  - Keep the "list what each call can throw or return" check in auth reviews.
