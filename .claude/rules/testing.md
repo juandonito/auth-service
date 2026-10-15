@@ -1,7 +1,7 @@
 # Testing
 
 - TDD: write a failing test before implementation code, for every new behavior.
-- When wrinting unit tests follow the AAA pattern strictly and mock all external dependencies.
+- When writing unit tests follow the AAA pattern strictly and mock all external dependencies.
 - Unit tests represent minimum viable behavior of individual units of code.
 - Unit tests: `*.spec.ts`, no real database — mock Prisma calls.
 - E2E tests: `*.e2e-spec.ts`, run against real Postgres (via Docker Compose locally, via CI service container in GitHub Actions).
