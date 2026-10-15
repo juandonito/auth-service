@@ -10,18 +10,18 @@ Implements [SPEC.md](./SPEC.md). Follows `.claude/rules/workflow.md`:
 
 The `RefreshToken` table lives in the `auth` domain and is touched only through a new `RefreshTokenRepository` in `auth/repositories/`.
 
-| Piece | Location | Role |
-| --- | --- | --- |
-| `RefreshToken` model + `User.refreshTokens` relation | `prisma/schema.prisma` | spec schema, `onDelete: Cascade` |
-| `InvalidRefreshTokenError` | `auth/errors/` | the single 401 error, mapped in `STATUS_BY_ERROR` |
-| `TokenHasherService` | `auth/services/` | `hash(token)` is SHA-256 hex. `matches(token, storedHash)` compares 32-byte digest buffers with `timingSafeEqual`; a wrong-length stored hash returns `false` |
-| `RefreshTokenIssuerService` | `auth/services/` | `issue(userId, familyId?)` generates `id` with `randomUUID()`, signs `{sub}` with `jwtid: id`, `JWT_REFRESH_SECRET`, HS256 and the TTL, decodes `exp` to get `expiresAt`, hashes, and returns `{id, familyId, token, tokenHash, expiresAt}` without touching the DB. `verify(token)` pins HS256, validates that `sub` and `jti` are strings, and converts every failure to `InvalidRefreshTokenError` |
-| `RefreshTokenRepository` | `auth/repositories/` | `create`, `findByIdWithTokenHash`, `rotate(oldId, newRow): Promise<boolean>` |
-| `UserRepository.findById` | `users/repositories/` | returns a `PublicUser`, never `passwordHash` |
-| `RotateRefreshTokenUseCase` | `auth/usecases/` | the processing order from the spec |
-| `LoginUserUseCase` | `auth/usecases/` | now also issues and persists a refresh token |
-| `POST /auth/refresh` + `RefreshDto` | `auth/` | `@HttpCode(200)` |
-| `AuthTokensDto`, refresh payload and row DTOs | `auth/dto/` | named types, not inline |
+| Piece                                                | Location               | Role                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RefreshToken` model + `User.refreshTokens` relation | `prisma/schema.prisma` | spec schema, `onDelete: Cascade`                                                                                                                                                                                                                                                                                                                                                                      |
+| `InvalidRefreshTokenError`                           | `auth/errors/`         | the single 401 error, mapped in `STATUS_BY_ERROR`                                                                                                                                                                                                                                                                                                                                                     |
+| `TokenHasherService`                                 | `auth/services/`       | `hash(token)` is SHA-256 hex. `matches(token, storedHash)` compares 32-byte digest buffers with `timingSafeEqual`; a wrong-length stored hash returns `false`                                                                                                                                                                                                                                         |
+| `RefreshTokenIssuerService`                          | `auth/services/`       | `issue(userId, familyId?)` generates `id` with `randomUUID()`, signs `{sub}` with `jwtid: id`, `JWT_REFRESH_SECRET`, HS256 and the TTL, decodes `exp` to get `expiresAt`, hashes, and returns `{id, familyId, token, tokenHash, expiresAt}` without touching the DB. `verify(token)` pins HS256, validates that `sub` and `jti` are strings, and converts every failure to `InvalidRefreshTokenError` |
+| `RefreshTokenRepository`                             | `auth/repositories/`   | `create`, `findByIdWithTokenHash`, `rotate(oldId, newRow): Promise<boolean>`                                                                                                                                                                                                                                                                                                                          |
+| `UserRepository.findById`                            | `users/repositories/`  | returns a `PublicUser`, never `passwordHash`                                                                                                                                                                                                                                                                                                                                                          |
+| `RotateRefreshTokenUseCase`                          | `auth/usecases/`       | the processing order from the spec                                                                                                                                                                                                                                                                                                                                                                    |
+| `LoginUserUseCase`                                   | `auth/usecases/`       | now also issues and persists a refresh token                                                                                                                                                                                                                                                                                                                                                          |
+| `POST /auth/refresh` + `RefreshDto`                  | `auth/`                | `@HttpCode(200)`                                                                                                                                                                                                                                                                                                                                                                                      |
+| `AuthTokensDto`, refresh payload and row DTOs        | `auth/dto/`            | named types, not inline                                                                                                                                                                                                                                                                                                                                                                               |
 
 **Keeping `exp` equal to `expiresAt`:** the service signs with `expiresIn`, then reads `exp` back from the signed token. One source of truth, no parsing of `'7d'`, no new dependency.
 
@@ -54,9 +54,9 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 8: `POST /auth/refresh` and wiring**
   - [x] Tests (controller, `RefreshDto` validation)
   - [x] Implementation (`RefreshDto`, route, `AuthModule` providers)
-- [ ] **Step 9: E2E** (approval-gated: `docker compose`)
-  - [ ] `test/auth-refresh.e2e-spec.ts` covering every success criterion, including the concurrent-refresh race
-  - [ ] Suite green against real Postgres (after approval)
+- [x] **Step 9: E2E** (approval-gated: `docker compose`)
+  - [x] `test/auth-refresh.e2e-spec.ts` covering every success criterion, including the concurrent-refresh race
+  - [x] Suite green against real Postgres (after approval)
 - [ ] **Step 10: Final checks**
   - [ ] `pnpm run test:cov` meets thresholds (90/90/90, branches 75)
   - [ ] Final diff read against `CLAUDE.md` and `.claude/rules/`
@@ -144,7 +144,7 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - a role change is picked up by the next refresh
 - identical 401 bodies
 - no `tokenHash` or `passwordHash` in any response
-- the app fails to start without `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN`
+- (the app failing to start without `JWT_REFRESH_SECRET` or `JWT_REFRESH_EXPIRES_IN` is covered by the `RefreshTokenIssuerService` unit tests of Step 4, not here)
 
 The exact `docker compose` command is named for approval when reached.
 
@@ -158,16 +158,16 @@ The exact `docker compose` command is named for approval when reached.
 
 Everything an attacker can influence ends in the same 401.
 
-| Call | Unexpected outcome | Handling |
-| --- | --- | --- |
-| `verifyAsync` | bad signature, wrong algorithm, expired or malformed | caught in `verify`, rethrown as `InvalidRefreshTokenError` |
-| payload shape | `sub` or `jti` missing or not a string | explicit check, then `InvalidRefreshTokenError` |
-| `findByIdWithTokenHash` | `null` (unknown, or user deleted by cascade) | `InvalidRefreshTokenError` |
-| `matches` | a wrong-length stored hash would make `timingSafeEqual` throw | returns `false`, so it is a mismatch and a 401 |
-| `revokedAt` set or `expiresAt` past | | `InvalidRefreshTokenError` |
-| `UserRepository.findById` | `null` in a race | `InvalidRefreshTokenError` |
-| `rotate` | `false` when the race is lost, with no insert | `InvalidRefreshTokenError` |
-| DB or signing errors | not caused by user input | propagate as 500, the same for every caller |
+| Call                                | Unexpected outcome                                            | Handling                                                   |
+| ----------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------- |
+| `verifyAsync`                       | bad signature, wrong algorithm, expired or malformed          | caught in `verify`, rethrown as `InvalidRefreshTokenError` |
+| payload shape                       | `sub` or `jti` missing or not a string                        | explicit check, then `InvalidRefreshTokenError`            |
+| `findByIdWithTokenHash`             | `null` (unknown, or user deleted by cascade)                  | `InvalidRefreshTokenError`                                 |
+| `matches`                           | a wrong-length stored hash would make `timingSafeEqual` throw | returns `false`, so it is a mismatch and a 401             |
+| `revokedAt` set or `expiresAt` past |                                                               | `InvalidRefreshTokenError`                                 |
+| `UserRepository.findById`           | `null` in a race                                              | `InvalidRefreshTokenError`                                 |
+| `rotate`                            | `false` when the race is lost, with no insert                 | `InvalidRefreshTokenError`                                 |
+| DB or signing errors                | not caused by user input                                      | propagate as 500, the same for every caller                |
 
 ## Decisions
 
