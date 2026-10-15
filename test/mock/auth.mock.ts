@@ -1,10 +1,12 @@
 import type { LoginDto } from '@auth/dto/login.dto';
+import type { RefreshDto } from '@auth/dto/refresh.dto';
 import type { RegisterDto } from '@auth/dto/register.dto';
 import {
   generateRandomEmail,
   generateRandomInt,
   generateRandomString,
 } from './common.mock';
+import { generateMockRefreshTokenJwt } from './refresh-token.mock';
 
 /** Random password that satisfies the register rules (9+ chars, upper, lower, digit). */
 export function generateMockPassword(
@@ -35,4 +37,10 @@ export function generateMockRegisterDto(
     password: generateMockPassword(),
     ...overrides,
   };
+}
+
+export function generateMockRefreshDto(
+  overrides: Partial<RefreshDto> = {},
+): RefreshDto {
+  return { refreshToken: generateMockRefreshTokenJwt(), ...overrides };
 }

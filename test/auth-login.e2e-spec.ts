@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { createHash } from 'node:crypto';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '@common/database/prisma.service';
@@ -17,6 +18,7 @@ describe('POST /auth/login (e2e)', () => {
   let tokenVerifier: JwtService;
   let referenceSigner: JwtService;
   let secret: string;
+  let refreshTokenVerifier: JwtService;
   const seededEmails: string[] = [];
 
   const login = (body: object) =>
@@ -48,6 +50,9 @@ describe('POST /auth/login (e2e)', () => {
     const config = app.get(ConfigService);
     secret = config.getOrThrow<string>('JWT_SECRET');
     tokenVerifier = new JwtService({ secret });
+    refreshTokenVerifier = new JwtService({
+      secret: config.getOrThrow<string>('JWT_REFRESH_SECRET'),
+    });
     referenceSigner = new JwtService({
       secret,
       signOptions: { expiresIn: config.getOrThrow('JWT_EXPIRES_IN') },
@@ -59,12 +64,65 @@ describe('POST /auth/login (e2e)', () => {
     await app.close();
   });
 
-  it('should respond 200 with an access token and nothing else for valid credentials', async () => {
+  it('should respond 200 with an access token and a refresh token and nothing else for valid credentials', async () => {
     const { email, password } = await seedUser();
 
     const { body } = await login({ email, password }).expect(200);
 
-    expect(Object.keys(body)).toEqual(['accessToken']);
+    expect(Object.keys(body).sort()).toEqual(['accessToken', 'refreshToken']);
+  });
+
+  it('should persist a row for the refresh token holding only its hash', async () => {
+    const { user, email, password } = await seedUser();
+
+    const { body } = await login({ email, password }).expect(200);
+
+    const { jti, exp } = refreshTokenVerifier.decode(body.refreshToken);
+    const row = await prisma.refreshToken.findUnique({ where: { id: jti } });
+    expect(row).toMatchObject({
+      userId: user.id,
+      tokenHash: createHash('sha256').update(body.refreshToken).digest('hex'),
+      revokedAt: null,
+      replacedBy: null,
+    });
+    expect(row?.tokenHash).not.toBe(body.refreshToken);
+    expect(row?.expiresAt).toEqual(new Date(exp * 1000));
+  });
+
+  it('should sign the refresh token with the refresh secret only, carrying just the user id and its row id', async () => {
+    const { user, email, password } = await seedUser();
+
+    const { body } = await login({ email, password }).expect(200);
+
+    const payload = await refreshTokenVerifier.verifyAsync(body.refreshToken);
+    expect(Object.keys(payload).sort()).toEqual(['exp', 'iat', 'jti', 'sub']);
+    expect(payload.sub).toBe(user.id);
+    await expect(
+      tokenVerifier.verifyAsync(body.refreshToken),
+    ).rejects.toThrow();
+  });
+
+  it('should start a new family on every login', async () => {
+    const { user, email, password } = await seedUser();
+
+    await login({ email, password }).expect(200);
+    await login({ email, password }).expect(200);
+
+    const rows = await prisma.refreshToken.findMany({
+      where: { userId: user.id },
+    });
+    expect(rows).toHaveLength(2);
+    expect(rows[0].familyId).not.toBe(rows[1].familyId);
+  });
+
+  it('should not create a refresh token for a failed login', async () => {
+    const { user, email } = await seedUser();
+
+    await login({ email, password: generateMockPassword() }).expect(401);
+
+    await expect(
+      prisma.refreshToken.count({ where: { userId: user.id } }),
+    ).resolves.toBe(0);
   });
 
   it.each([Role.USER, Role.ADMIN])(

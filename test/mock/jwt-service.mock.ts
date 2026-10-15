@@ -1,4 +1,5 @@
 import { generateRandomString } from './common.mock';
+import { generateMockRefreshTokenPayload } from './refresh-token.mock';
 
 export type MockJwtService = ReturnType<typeof generateMockJwtService>;
 
@@ -10,5 +11,7 @@ export function generateMockAccessToken(): string {
 export function generateMockJwtService() {
   return {
     signAsync: jest.fn().mockResolvedValue(generateMockAccessToken()),
+    verifyAsync: jest.fn().mockResolvedValue(generateMockRefreshTokenPayload()),
+    decode: jest.fn().mockReturnValue(generateMockRefreshTokenPayload()),
   };
 }

@@ -2,9 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UserWithPasswordHash } from '@users/dto/user-with-password-hash.dto';
 import { UserRepository } from '@users/repositories/user.repository';
 import { PasswordHasherService } from '@users/services/password-hasher.service';
-import type { AccessTokenDto } from '../dto/access-token.dto';
+import type { AuthTokensDto } from '../dto/auth-tokens.dto';
 import type { LoginDto } from '../dto/login.dto';
 import { InvalidCredentialsError } from '../errors/invalid-credentials.error';
+import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
+import { RefreshTokenIssuerService } from '../services/refresh-token-issuer.service';
 import { TokenIssuerService } from '../services/token-issuer.service';
 
 @Injectable()
@@ -15,9 +17,11 @@ export class LoginUserUseCase {
     private readonly userRepository: UserRepository,
     private readonly passwordHasher: PasswordHasherService,
     private readonly tokenIssuer: TokenIssuerService,
+    private readonly refreshTokenIssuer: RefreshTokenIssuerService,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
 
-  async execute({ email, password }: LoginDto): Promise<AccessTokenDto> {
+  async execute({ email, password }: LoginDto): Promise<AuthTokensDto> {
     const user = await this.userRepository.findByEmailWithPasswordHash(email);
     if (!user) {
       // Same cost as a real verification, so an unknown email can't be timed.
@@ -27,7 +31,26 @@ export class LoginUserUseCase {
     if (!(await this.isPasswordValid(user, password))) {
       throw new InvalidCredentialsError();
     }
-    return this.tokenIssuer.issue(user);
+    const { accessToken } = await this.tokenIssuer.issue(user);
+    const refreshToken = await this.startSession(user.id);
+    return { accessToken, refreshToken };
+  }
+
+  /**
+   * Issues the refresh token of a new family and persists its row (hash only).
+   * Returns the raw token, the only copy that will ever exist.
+   */
+  private async startSession(userId: string): Promise<string> {
+    const { token, id, familyId, tokenHash, expiresAt } =
+      await this.refreshTokenIssuer.issue(userId);
+    await this.refreshTokenRepository.create({
+      id,
+      familyId,
+      userId,
+      tokenHash,
+      expiresAt,
+    });
+    return token;
   }
 
   /**
