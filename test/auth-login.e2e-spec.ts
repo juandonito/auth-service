@@ -125,7 +125,7 @@ describe('POST /auth/login (e2e)', () => {
     ).resolves.toBe(0);
   });
 
-  it.each([Role.USER, Role.ADMIN])(
+  it.each(Object.values(Role))(
     'should issue a token carrying the id and the %s role of the user',
     async (role) => {
       const { user, email, password } = await seedUser(role);
