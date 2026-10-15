@@ -57,10 +57,10 @@ The `RefreshToken` table lives in the `auth` domain and is touched only through 
 - [x] **Step 9: E2E** (approval-gated: `docker compose`)
   - [x] `test/auth-refresh.e2e-spec.ts` covering every success criterion, including the concurrent-refresh race
   - [x] Suite green against real Postgres (after approval)
-- [ ] **Step 10: Final checks**
-  - [ ] `pnpm run test:cov` meets thresholds (90/90/90, branches 75)
-  - [ ] Final diff read against `CLAUDE.md` and `.claude/rules/`
-  - [ ] SPEC.md Recap left for after the PR
+- [x] **Step 10: Final checks**
+  - [x] `pnpm run test:cov` meets thresholds (90/90/90, branches 75)
+  - [x] Final diff read against `CLAUDE.md` and `.claude/rules/`
+  - [x] SPEC.md Recap left for after the PR
 
 ## Steps
 
